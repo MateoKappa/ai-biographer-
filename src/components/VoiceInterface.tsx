@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { AudioRecorder, encodeAudioForAPI, playAudioData } from '@/utils/RealtimeAudio';
+import { supabase } from '@/integrations/supabase/client';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
@@ -15,107 +15,157 @@ const VoiceInterface = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const wsRef = useRef<WebSocket | null>(null);
-  const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
+    // Create audio element
+    audioRef.current = document.createElement("audio");
+    audioRef.current.autoplay = true;
+    
     return () => {
       cleanup();
     };
   }, []);
 
   const cleanup = () => {
-    recorderRef.current?.stop();
-    wsRef.current?.close();
-    audioContextRef.current?.close();
+    dcRef.current?.close();
+    pcRef.current?.close();
+    streamRef.current?.getTracks().forEach(track => track.stop());
   };
 
   const startConversation = async () => {
     try {
       setIsConnecting(true);
+      console.log('Getting ephemeral token...');
       
-      // Request microphone access
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Get ephemeral token from our edge function
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-realtime-token');
       
-      // Initialize audio context
-      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-      
-      // Connect to WebSocket
-      const projectRef = 'wczgqokhrlzbvhjpgebo';
-      const wsUrl = `wss://${projectRef}.supabase.co/functions/v1/realtime-chat`;
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
+      if (tokenError) {
+        console.error('Token error:', tokenError);
+        throw new Error(tokenError.message || 'Failed to get authentication token');
+      }
 
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setIsConnected(true);
-        setIsConnecting(false);
-        toast.success('Voice conversation started!');
-        
-        // Start recording
-        startRecording();
-      };
+      if (!tokenData?.client_secret?.value) {
+        throw new Error("Failed to get ephemeral token");
+      }
 
-      ws.onmessage = async (event) => {
-        const data = JSON.parse(event.data);
-        console.log('Received:', data.type);
-        
-        if (data.type === 'response.audio.delta') {
-          setIsSpeaking(true);
-          const binaryString = atob(data.delta);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          if (audioContextRef.current) {
-            await playAudioData(audioContextRef.current, bytes);
-          }
-        } else if (data.type === 'response.audio.done') {
-          setIsSpeaking(false);
-        } else if (data.type === 'conversation.item.input_audio_transcription.completed') {
-          setMessages(prev => [...prev, { role: 'user', content: data.transcript }]);
-        } else if (data.type === 'response.audio_transcript.delta') {
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last?.role === 'assistant') {
-              return [...prev.slice(0, -1), { role: 'assistant', content: last.content + data.delta }];
-            }
-            return [...prev, { role: 'assistant', content: data.delta }];
-          });
+      const EPHEMERAL_KEY = tokenData.client_secret.value;
+      console.log('Got ephemeral token, creating peer connection...');
+
+      // Create peer connection
+      pcRef.current = new RTCPeerConnection();
+
+      // Set up remote audio
+      pcRef.current.ontrack = (e) => {
+        console.log('Received remote track');
+        if (audioRef.current) {
+          audioRef.current.srcObject = e.streams[0];
         }
       };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        toast.error('Failed to connect. Make sure you have added OpenAI API key in Lovable Cloud settings.');
-        setIsConnecting(false);
-      };
+      // Add local audio track
+      console.log('Requesting microphone access...');
+      streamRef.current = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 24000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true
+        } 
+      });
+      pcRef.current.addTrack(streamRef.current.getTracks()[0]);
 
-      ws.onclose = () => {
-        console.log('WebSocket closed');
+      // Set up data channel
+      dcRef.current = pcRef.current.createDataChannel("oai-events");
+      
+      dcRef.current.addEventListener("open", () => {
+        console.log("Data channel opened");
+        setIsConnected(true);
+        setIsConnecting(false);
+        toast.success("Voice conversation started!");
+      });
+
+      dcRef.current.addEventListener("message", (e) => {
+        try {
+          const event = JSON.parse(e.data);
+          console.log("Received event:", event.type);
+          
+          if (event.type === 'response.audio.delta') {
+            setIsSpeaking(true);
+          } else if (event.type === 'response.audio.done') {
+            setIsSpeaking(false);
+          } else if (event.type === 'conversation.item.input_audio_transcription.completed') {
+            setMessages(prev => [...prev, { role: 'user', content: event.transcript }]);
+          } else if (event.type === 'response.audio_transcript.delta') {
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last?.role === 'assistant') {
+                return [...prev.slice(0, -1), { role: 'assistant', content: last.content + event.delta }];
+              }
+              return [...prev, { role: 'assistant', content: event.delta }];
+            });
+          } else if (event.type === 'error') {
+            console.error('OpenAI error:', event);
+            toast.error('AI error: ' + (event.error?.message || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error processing message:', error);
+        }
+      });
+
+      dcRef.current.addEventListener("error", (e) => {
+        console.error("Data channel error:", e);
+        toast.error("Connection error");
+      });
+
+      dcRef.current.addEventListener("close", () => {
+        console.log("Data channel closed");
         setIsConnected(false);
         setIsSpeaking(false);
+      });
+
+      // Create and set local description
+      console.log('Creating offer...');
+      const offer = await pcRef.current.createOffer();
+      await pcRef.current.setLocalDescription(offer);
+
+      // Connect to OpenAI's Realtime API
+      console.log('Connecting to OpenAI...');
+      const baseUrl = "https://api.openai.com/v1/realtime";
+      const model = "gpt-4o-realtime-preview-2024-12-17";
+      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+        method: "POST",
+        body: offer.sdp,
+        headers: {
+          Authorization: `Bearer ${EPHEMERAL_KEY}`,
+          "Content-Type": "application/sdp"
+        },
+      });
+
+      if (!sdpResponse.ok) {
+        const error = await sdpResponse.text();
+        throw new Error(`OpenAI connection failed: ${error}`);
+      }
+
+      const answer = {
+        type: "answer" as RTCSdpType,
+        sdp: await sdpResponse.text(),
       };
+      
+      await pcRef.current.setRemoteDescription(answer);
+      console.log("WebRTC connection established");
 
     } catch (error) {
       console.error('Error starting conversation:', error);
-      toast.error('Failed to start conversation');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start conversation';
+      toast.error(errorMessage);
       setIsConnecting(false);
+      cleanup();
     }
-  };
-
-  const startRecording = () => {
-    recorderRef.current = new AudioRecorder((audioData) => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        const base64Audio = encodeAudioForAPI(audioData);
-        wsRef.current.send(JSON.stringify({
-          type: 'input_audio_buffer.append',
-          audio: base64Audio
-        }));
-      }
-    });
-    recorderRef.current.start();
   };
 
   const endConversation = () => {
