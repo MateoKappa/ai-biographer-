@@ -6,11 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, ImagePlus, Check } from "lucide-react";
+import { Loader2, Sparkles, ImagePlus, Mic, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VoiceInterface from "@/components/VoiceInterface";
 
 const StoryInput = () => {
   const [story, setStory] = useState("");
@@ -173,107 +175,126 @@ const StoryInput = () => {
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-4xl flex items-center justify-center gap-3 gradient-text mb-2">
               <Sparkles className="h-10 w-10" />
-              Tell Your Story
+              Create Your Story
             </CardTitle>
             <CardDescription className="text-base">
-              Write a short story and watch it transform into a cartoon!
+              Choose how you want to tell your story
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="story">Your Story (up to {maxWords} words)</Label>
-              <Textarea
-                id="story"
-                placeholder="Once upon a time..."
-                value={story}
-                onChange={(e) => setStory(e.target.value)}
-                rows={10}
-                className="resize-none"
-              />
-              <p className="text-sm text-muted-foreground text-right">
-                {wordCount} / {maxWords} words
-              </p>
-            </div>
+            <Tabs defaultValue="text" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="text">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Write Story
+                </TabsTrigger>
+                <TabsTrigger value="voice">
+                  <Mic className="w-4 h-4 mr-2" />
+                  Voice Chat
+                </TabsTrigger>
+              </TabsList>
 
-            <div className="space-y-2">
-              <Label htmlFor="photo" className="flex items-center gap-2">
-                <ImagePlus className="h-4 w-4" />
-                Add Your Photo (Optional)
-              </Label>
-              <Input
-                id="photo"
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-              />
-              {photo && (
-                <p className="text-sm text-muted-foreground">
-                  Selected: {photo.name}
-                </p>
-              )}
-            </div>
+              <TabsContent value="text" className="space-y-6 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="story">Your Story (up to {maxWords} words)</Label>
+                  <Textarea
+                    id="story"
+                    placeholder="Once upon a time..."
+                    value={story}
+                    onChange={(e) => setStory(e.target.value)}
+                    rows={10}
+                    className="resize-none"
+                  />
+                  <p className="text-sm text-muted-foreground text-right">
+                    {wordCount} / {maxWords} words
+                  </p>
+                </div>
 
-            <div className="space-y-2">
-              <Label>Include Memories (Optional)</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between"
-                    type="button"
-                  >
-                    {selectedMemoryIds.length > 0
-                      ? `${selectedMemoryIds.length} memories selected`
-                      : "Select memories to include"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
-                  <ScrollArea className="h-72">
-                    {memories.length === 0 ? (
-                      <div className="p-4 text-sm text-muted-foreground">
-                        No memories yet. Create some in Memory Templates!
-                      </div>
-                    ) : (
-                      <div className="p-4 space-y-3">
-                        {memories.map((memory: any) => (
-                          <div
-                            key={memory.id}
-                            className="flex items-start gap-3 p-2 rounded hover:bg-muted/50 cursor-pointer"
-                            onClick={() => toggleMemory(memory.id)}
-                          >
-                            <Checkbox
-                              checked={selectedMemoryIds.includes(memory.id)}
-                              onCheckedChange={() => toggleMemory(memory.id)}
-                            />
-                            <div className="flex-1 space-y-1">
-                              <p className="text-sm font-medium">
-                                {memory.template_questions?.question_text}
-                              </p>
-                              <p className="text-xs text-muted-foreground line-clamp-2">
-                                {memory.answer_text}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {memory.memory_templates?.name}
-                              </p>
-                            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="photo" className="flex items-center gap-2">
+                    <ImagePlus className="h-4 w-4" />
+                    Add Your Photo (Optional)
+                  </Label>
+                  <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                  />
+                  {photo && (
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {photo.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Include Memories (Optional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between"
+                        type="button"
+                      >
+                        {selectedMemoryIds.length > 0
+                          ? `${selectedMemoryIds.length} memories selected`
+                          : "Select memories to include"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <ScrollArea className="h-72">
+                        {memories.length === 0 ? (
+                          <div className="p-4 text-sm text-muted-foreground">
+                            No memories yet. Create some in Memory Templates!
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-            </div>
+                        ) : (
+                          <div className="p-4 space-y-3">
+                            {memories.map((memory: any) => (
+                              <div
+                                key={memory.id}
+                                className="flex items-start gap-3 p-2 rounded hover:bg-muted/50 cursor-pointer"
+                                onClick={() => toggleMemory(memory.id)}
+                              >
+                                <Checkbox
+                                  checked={selectedMemoryIds.includes(memory.id)}
+                                  onCheckedChange={() => toggleMemory(memory.id)}
+                                />
+                                <div className="flex-1 space-y-1">
+                                  <p className="text-sm font-medium">
+                                    {memory.template_questions?.question_text}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
+                                    {memory.answer_text}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {memory.memory_templates?.name}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-            <Button
-              onClick={handleGenerate}
-              disabled={loading || wordCount > maxWords || !story.trim()}
-              className="w-full"
-              size="lg"
-            >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? "Creating Magic..." : "Generate Cartoon"}
-            </Button>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={loading || wordCount > maxWords || !story.trim()}
+                  className="w-full"
+                  size="lg"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading ? "Creating Magic..." : "Generate Cartoon"}
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="voice" className="mt-6">
+                <VoiceInterface />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
