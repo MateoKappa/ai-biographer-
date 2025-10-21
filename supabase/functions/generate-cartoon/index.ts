@@ -18,7 +18,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -85,15 +85,15 @@ serve(async (req) => {
       console.log("Detected conversation format, extracting story...");
       
       const extractResponse = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        "https://api.openai.com/v1/chat/completions",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${lovableApiKey}`,
+            Authorization: `Bearer ${openaiApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: "gpt-5-mini-2025-08-07",
             messages: [
               {
                 role: "system",
@@ -118,15 +118,15 @@ serve(async (req) => {
 
     // Step 1: Use AI to split story into 2-4 scenes
     const scenesResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${lovableApiKey}`,
+          Authorization: `Bearer ${openaiApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gpt-5-mini-2025-08-07",
           messages: [
             {
               role: "system",
@@ -198,22 +198,20 @@ serve(async (req) => {
       const imagePrompt = `Create a colorful cartoon illustration in comic book style depicting this scene: ${sceneText}. IMPORTANT: Keep the same character throughout all panels - maintain consistent appearance, age, and features. Vibrant colors, bold outlines, expressive characters, cinematic composition, suitable for all ages.`;
 
       const imageResponse = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        "https://api.openai.com/v1/images/generations",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${lovableApiKey}`,
+            Authorization: `Bearer ${openaiApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image-preview",
-            messages: [
-              {
-                role: "user",
-                content: imagePrompt,
-              },
-            ],
-            modalities: ["image", "text"],
+            model: "gpt-image-1",
+            prompt: imagePrompt,
+            n: 1,
+            size: "1024x1024",
+            quality: "high",
+            output_format: "png",
           }),
         }
       );
@@ -227,13 +225,14 @@ serve(async (req) => {
       const imageData = await imageResponse.json();
       console.log(`Image generated for scene ${i + 1}`);
 
-      // Extract the base64 image
-      const imageUrl =
-        imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      // Extract the base64 image from OpenAI response
+      const imageUrl = imageData.data?.[0]?.b64_json 
+        ? `data:image/png;base64,${imageData.data[0].b64_json}`
+        : null;
 
       if (!imageUrl) {
         console.error("No image URL in response:", imageData);
-        throw new Error("Failed to get image URL from AI");
+        throw new Error("Failed to get image URL from OpenAI");
       }
 
       // Store the panel in database
