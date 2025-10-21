@@ -31,6 +31,34 @@ const Results = () => {
       }
 
       fetchStoryAndPanels();
+      
+      // Set up real-time subscription for new panels
+      const channel = supabase
+        .channel('cartoon-panels-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'cartoon_panels',
+            filter: `story_id=eq.${storyId}`
+          },
+          (payload) => {
+            console.log('New panel received:', payload);
+            const newPanel = payload.new as CartoonPanel;
+            setPanels((prev) => {
+              // Check if panel already exists
+              if (prev.some(p => p.id === newPanel.id)) return prev;
+              // Add and sort by order_index
+              return [...prev, newPanel].sort((a, b) => a.order_index - b.order_index);
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
 
     checkAuth();
@@ -109,14 +137,14 @@ const Results = () => {
     });
   };
 
-  if (loading || status === "processing") {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
         <Card className="card-glass p-10 text-center max-w-md animate-scale-in">
           <Loader2 className="h-16 w-16 animate-spin mx-auto mb-6 text-primary" />
-          <h2 className="text-3xl font-bold mb-3 gradient-text">Creating Your Cartoon...</h2>
+          <h2 className="text-3xl font-bold mb-3 gradient-text">Loading Your Story...</h2>
           <p className="text-muted-foreground text-lg">
-            This magical process takes about 30-60 seconds ✨
+            Just a moment ✨
           </p>
         </Card>
       </div>
@@ -144,15 +172,26 @@ const Results = () => {
 
         <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">Your Cartoon Story</h1>
         <p className="text-center text-muted-foreground mb-16 text-lg">
-          Scroll down to see your story come to life! ✨
+          {status === "processing" 
+            ? "Watch as your panels appear one by one! ✨" 
+            : "Scroll down to see your story! ✨"
+          }
         </p>
+
+        {status === "processing" && panels.length === 0 && (
+          <Card className="card-glass p-10 text-center mb-10 animate-pulse">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground text-lg">
+              Creating your first panel... This takes about 20-30 seconds per panel
+            </p>
+          </Card>
+        )}
 
         <div className="space-y-10">
           {panels.map((panel, index) => (
             <Card
               key={panel.id}
               className="card-clean animate-slide-up overflow-hidden hover:shadow-2xl transition-all duration-300"
-              style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardContent className="p-0">
                 <img
@@ -169,7 +208,16 @@ const Results = () => {
           ))}
         </div>
 
-        {panels.length === 0 && (
+        {status === "processing" && panels.length > 0 && (
+          <Card className="card-glass p-10 text-center mt-10 animate-pulse">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground text-lg">
+              Creating panel {panels.length + 1}... Hang tight!
+            </p>
+          </Card>
+        )}
+
+        {status !== "processing" && panels.length === 0 && (
           <Card className="card-glass p-10 text-center">
             <p className="text-muted-foreground text-lg">
               No panels generated yet. This might be an error.
