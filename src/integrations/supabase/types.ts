@@ -162,6 +162,7 @@ export type Database = {
       }
       stories: {
         Row: {
+          context_qa: Json | null
           created_at: string
           id: string
           memory_ids: string[] | null
@@ -172,6 +173,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          context_qa?: Json | null
           created_at?: string
           id?: string
           memory_ids?: string[] | null
@@ -182,6 +184,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          context_qa?: Json | null
           created_at?: string
           id?: string
           memory_ids?: string[] | null

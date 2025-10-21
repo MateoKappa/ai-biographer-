@@ -33,6 +33,12 @@ serve(async (req) => {
 
     console.log("Story fetched:", story.story_text.substring(0, 100));
 
+    // Update story status to processing
+    await supabase
+      .from("stories")
+      .update({ status: "processing" })
+      .eq("id", storyId);
+
     // Fetch the selected memories if any
     let memoriesText = "";
     if (story.memory_ids && story.memory_ids.length > 0) {
@@ -54,10 +60,22 @@ serve(async (req) => {
       }
     }
 
-    // Combine story text and memories
-    const fullStory = memoriesText
-      ? `${story.story_text}\n\nBased on these memories:\n\n${memoriesText}`
-      : story.story_text;
+    // Add context from Q&A if available
+    let contextText = "";
+    if (story.context_qa && Array.isArray(story.context_qa) && story.context_qa.length > 0) {
+      contextText = story.context_qa
+        .map((qa: any) => `${qa.question}\n${qa.answer}`)
+        .join("\n\n");
+    }
+
+    // Combine story text, memories, and additional context
+    let fullStory = story.story_text;
+    if (memoriesText) {
+      fullStory += `\n\nBased on these memories:\n\n${memoriesText}`;
+    }
+    if (contextText) {
+      fullStory += `\n\nAdditional context:\n\n${contextText}`;
+    }
 
     console.log("Full story length:", fullStory.length);
 
