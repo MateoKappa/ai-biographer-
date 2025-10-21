@@ -122,8 +122,22 @@ serve(async (req) => {
     const panels = [];
     for (let i = 0; i < scenes.length; i++) {
       const sceneData = scenes[i];
-      // Handle both object format and string format
-      const sceneText = typeof sceneData === 'string' ? sceneData : sceneData.scene;
+      
+      // Handle different scene formats
+      let sceneText: string;
+      if (typeof sceneData === 'string') {
+        sceneText = sceneData;
+      } else if (sceneData.scene) {
+        sceneText = sceneData.scene;
+      } else if (sceneData.setting && sceneData.action) {
+        // Handle structured format with setting, action, emotion
+        sceneText = `${sceneData.setting} ${sceneData.action}`;
+        if (sceneData.emotion) sceneText += ` ${sceneData.emotion}`;
+      } else {
+        console.error("Unknown scene format:", sceneData);
+        sceneText = JSON.stringify(sceneData);
+      }
+      
       console.log(`Generating image for scene ${i + 1}:`, sceneText.substring(0, 100));
 
       const imagePrompt = `Create a colorful cartoon illustration in comic book style depicting this scene: ${sceneText}. IMPORTANT: Keep the same character throughout all panels - maintain consistent appearance, age, and features. Vibrant colors, bold outlines, expressive characters, cinematic composition, suitable for all ages.`;
