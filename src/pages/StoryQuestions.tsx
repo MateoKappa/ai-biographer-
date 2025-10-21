@@ -35,7 +35,7 @@ const StoryQuestions = () => {
   useEffect(() => {
     if (!storyId) return;
 
-    const fetchQuestions = async () => {
+    const fetchQuestionsAndGenerate = async () => {
       try {
         const { data, error } = await supabase.functions.invoke(
           "analyze-story",
@@ -46,17 +46,50 @@ const StoryQuestions = () => {
 
         if (error) throw error;
 
-        setQuestions(data.questions || []);
+        const questions = data.questions || [];
+        setQuestions(questions);
+        
+        // If no questions, skip this page and go straight to generation
+        if (questions.length === 0) {
+          console.log('No questions generated, skipping to cartoon generation');
+          setLoading(false);
+          
+          // Trigger cartoon generation directly
+          try {
+            await supabase.functions.invoke("generate-cartoon", {
+              body: { storyId },
+            });
+            navigate(`/results/${storyId}`);
+          } catch (genError) {
+            console.error("Error generating cartoon:", genError);
+            toast.error("Failed to start cartoon generation");
+            setLoading(false);
+          }
+          return;
+        }
       } catch (error) {
         console.error("Error fetching questions:", error);
-        toast.error("Failed to generate questions");
-      } finally {
+        toast.error("Failed to generate questions. Skipping to cartoon generation...");
         setLoading(false);
+        
+        // Try to generate cartoon anyway
+        try {
+          await supabase.functions.invoke("generate-cartoon", {
+            body: { storyId },
+          });
+          navigate(`/results/${storyId}`);
+        } catch (genError) {
+          console.error("Error generating cartoon:", genError);
+          toast.error("Failed to start cartoon generation");
+        }
+        return;
       }
+      
+      setLoading(false);
     };
 
-    fetchQuestions();
-  }, [storyId]);
+    fetchQuestionsAndGenerate();
+  }, [storyId, navigate]);
 
   const handleSkip = async () => {
     setSubmitting(true);
