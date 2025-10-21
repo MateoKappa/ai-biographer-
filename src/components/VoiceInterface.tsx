@@ -88,7 +88,7 @@ const VoiceInterface = () => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        toast.error('Connection error');
+        toast.error('Failed to connect. Make sure you have added OpenAI API key in Lovable Cloud settings.');
         setIsConnecting(false);
       };
 
