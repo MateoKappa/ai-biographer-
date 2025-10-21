@@ -121,42 +121,57 @@ const StoryQuestions = () => {
     setIsProcessing(true);
     try {
       // Convert blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = reader.result?.toString().split(",")[1];
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result?.toString().split(",")[1];
+          if (result) {
+            resolve(result);
+          } else {
+            reject(new Error("Failed to convert audio"));
+          }
+        };
+        reader.onerror = () => reject(new Error("Failed to read audio file"));
+        reader.readAsDataURL(audioBlob);
+      });
 
-        if (!base64Audio) {
-          throw new Error("Failed to convert audio");
-        }
+      // Transcribe audio
+      const { data: transcriptionData, error: transcriptionError } =
+        await supabase.functions.invoke("transcribe-audio", {
+          body: { audio: base64Audio },
+        });
 
-        // Transcribe audio
-        const { data: transcriptionData, error: transcriptionError } =
-          await supabase.functions.invoke("transcribe-audio", {
-            body: { audio: base64Audio },
-          });
+      if (transcriptionError) {
+        console.error("Transcription error:", transcriptionError);
+        throw new Error(transcriptionError.message || "Failed to transcribe audio");
+      }
 
-        if (transcriptionError) throw transcriptionError;
+      if (!transcriptionData?.text) {
+        throw new Error("No transcription received");
+      }
 
-        const transcription = transcriptionData.text;
-        console.log("Transcription:", transcription);
+      const transcription = transcriptionData.text;
+      console.log("Transcription:", transcription);
 
-        // Analyze and match to questions
-        const { data: answersData, error: answersError } =
-          await supabase.functions.invoke("analyze-answers", {
-            body: { transcription, questions },
-          });
+      // Analyze and match to questions
+      const { data: answersData, error: answersError } =
+        await supabase.functions.invoke("analyze-answers", {
+          body: { transcription, questions },
+        });
 
-        if (answersError) throw answersError;
+      if (answersError) {
+        console.error("Analysis error:", answersError);
+        throw new Error(answersError.message || "Failed to analyze answers");
+      }
 
-        // Prefill answers
-        setAnswers(answersData.answers);
-        toast.success("Answers prefilled from recording!");
-        setIsProcessing(false);
-      };
+      // Prefill answers
+      setAnswers(answersData.answers);
+      toast.success("Answers prefilled from recording!");
     } catch (error) {
       console.error("Error processing audio:", error);
-      toast.error("Failed to process recording");
+      const errorMessage = error instanceof Error ? error.message : "Failed to process recording";
+      toast.error(errorMessage);
+    } finally {
       setIsProcessing(false);
     }
   };

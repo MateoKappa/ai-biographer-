@@ -14,35 +14,35 @@ serve(async (req) => {
 
   try {
     const { audio } = await req.json();
-    console.log("Transcribing audio...");
+    console.log("Transcribing audio with Lovable AI...");
 
     if (!audio) {
       throw new Error("No audio data provided");
     }
 
-    const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openAIApiKey) {
-      throw new Error("OPENAI_API_KEY is not set");
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableApiKey) {
+      throw new Error("LOVABLE_API_KEY is not set");
     }
 
     // Convert base64 to binary
     const binaryAudio = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));
 
-    // Prepare form data for OpenAI Whisper API
+    // Prepare form data for Lovable AI
     const formData = new FormData();
     const blob = new Blob([binaryAudio], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
 
-    console.log("Sending to OpenAI Whisper API...");
+    console.log("Sending to Lovable AI...");
 
-    // Send to OpenAI Whisper API
+    // Send to Lovable AI
     const response = await fetch(
-      "https://api.openai.com/v1/audio/transcriptions",
+      "https://ai.gateway.lovable.dev/v1/audio/transcriptions",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${openAIApiKey}`,
+          Authorization: `Bearer ${lovableApiKey}`,
         },
         body: formData,
       }
@@ -50,8 +50,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      console.error("Lovable AI error:", errorText);
+      throw new Error(`Lovable AI error: ${errorText}`);
     }
 
     const result = await response.json();
