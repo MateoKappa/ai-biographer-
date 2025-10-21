@@ -15,6 +15,11 @@ serve(async (req) => {
 
   try {
     const { storyId } = await req.json();
+    
+    // 🎨 CONFIGURATION: Number of cartoon panels to generate
+    // Change this value to generate more panels (e.g., 2-4)
+    const NUM_PANELS = 1;
+    
     console.log("Generating cartoon for story:", storyId);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -121,8 +126,9 @@ serve(async (req) => {
       console.log("📖 Using original story text (not a conversation)");
     }
 
-    // Step 1: Use AI to split story into 2-4 scenes
-    console.log("🎬 STEP 2/3: Analyzing story and creating scenes...");
+    // Step 1: Use AI to split story into scenes
+    const sceneText = NUM_PANELS === 1 ? "scene" : `${NUM_PANELS} scenes`;
+    console.log(`🎬 STEP 2/3: Analyzing story and creating ${sceneText}...`);
     const scenesResponse = await fetch(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -137,11 +143,13 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You are a creative story analyzer. Split the story into 2-3 key scenes that would make great cartoon panels. Each scene should be a vivid visual description maintaining the same character throughout. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else. Format: [\"scene 1 description\", \"scene 2 description\", ...]",
+                `You are a creative story analyzer. ${NUM_PANELS === 1 
+                  ? "Create ONE key scene that captures the essence of the story as a vivid cartoon panel. Focus on the most impactful moment." 
+                  : `Split the story into ${NUM_PANELS} key scenes that would make great cartoon panels.`} Each scene should be a vivid visual description maintaining the same character throughout. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else. Format: [\"scene 1 description\", \"scene 2 description\", ...]`,
             },
             {
               role: "user",
-              content: `Create 2-3 cartoon scenes based on this story:\n\n${processedStory}`,
+              content: `Create ${NUM_PANELS === 1 ? "1 cartoon scene" : `${NUM_PANELS} cartoon scenes`} based on this story:\n\n${processedStory}`,
             },
           ],
         }),
@@ -169,11 +177,11 @@ serve(async (req) => {
       }
     } catch (parseError) {
       console.error("Failed to parse scenes:", parseError);
-      // Fallback: split story into sentences and take first 3
+      // Fallback: split story into sentences and take first NUM_PANELS
       scenes = story.story_text
         .split(/[.!?]+/)
         .filter((s: string) => s.trim().length > 20)
-        .slice(0, 3)
+        .slice(0, NUM_PANELS)
         .map((s: string) => ({ scene: s.trim() }));
     }
 
