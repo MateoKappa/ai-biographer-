@@ -164,6 +164,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          memory_ids: string[] | null
           photo_url: string | null
           status: string
           story_text: string
@@ -173,6 +174,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          memory_ids?: string[] | null
           photo_url?: string | null
           status?: string
           story_text: string
@@ -182,6 +184,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          memory_ids?: string[] | null
           photo_url?: string | null
           status?: string
           story_text?: string
