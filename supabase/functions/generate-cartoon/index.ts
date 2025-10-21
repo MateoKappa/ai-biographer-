@@ -79,6 +79,43 @@ serve(async (req) => {
 
     console.log("Full story length:", fullStory.length);
 
+    // Step 0.5: If this looks like a conversation transcript, extract the actual story first
+    let processedStory = fullStory;
+    if (fullStory.includes("User:") || fullStory.includes("AI:")) {
+      console.log("Detected conversation format, extracting story...");
+      
+      const extractResponse = await fetch(
+        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${lovableApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a story extractor. The user will provide a conversation transcript between a user and AI. Extract ONLY the actual story content that the user is telling (ignore AI's questions and prompts). Rewrite it as a coherent narrative in third person, keeping all the important details, characters, settings, and plot points the user described. Be detailed and vivid.",
+              },
+              {
+                role: "user",
+                content: fullStory,
+              },
+            ],
+          }),
+        }
+      );
+
+      if (extractResponse.ok) {
+        const extractData = await extractResponse.json();
+        processedStory = extractData.choices[0].message.content;
+        console.log("Extracted story:", processedStory.substring(0, 200));
+      }
+    }
+
     // Step 1: Use AI to split story into 2-4 scenes
     const scenesResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -94,11 +131,11 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You are a creative story analyzer. Split the user's story and memories into 2-4 key scenes that would make great cartoon panels. Each scene should be a vivid visual description based DIRECTLY on the memories provided, maintaining the same character throughout. Describe specific moments from the memories. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else.",
+                "You are a creative story analyzer. Split the story into 2-4 key scenes that would make great cartoon panels. Each scene should be a vivid visual description maintaining the same character throughout. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else. Format: [\"scene 1 description\", \"scene 2 description\", ...]",
             },
             {
               role: "user",
-              content: `Create 2-4 cartoon scenes based on this story and memories. Each scene should depict a specific memory, maintaining the same character:\n\n${fullStory}`,
+              content: `Create 2-4 cartoon scenes based on this story:\n\n${processedStory}`,
             },
           ],
         }),
