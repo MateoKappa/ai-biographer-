@@ -14,44 +14,59 @@ serve(async (req) => {
 
   try {
     const { audio } = await req.json();
-    console.log("Transcribing audio with Lovable AI...");
+    console.log("Transcribing audio...");
 
     if (!audio) {
       throw new Error("No audio data provided");
     }
 
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) {
-      throw new Error("LOVABLE_API_KEY is not set");
+    const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openAIApiKey) {
+      throw new Error("OpenAI API key not configured");
     }
 
     // Convert base64 to binary
     const binaryAudio = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));
 
-    // Prepare form data for Lovable AI
+    // Prepare form data for OpenAI Whisper API
     const formData = new FormData();
     const blob = new Blob([binaryAudio], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
 
-    console.log("Sending to Lovable AI...");
+    console.log("Sending to OpenAI Whisper API...");
 
-    // Send to Lovable AI
+    // Send to OpenAI Whisper API
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/audio/transcriptions",
+      "https://api.openai.com/v1/audio/transcriptions",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${lovableApiKey}`,
+          Authorization: `Bearer ${openAIApiKey}`,
         },
         body: formData,
       }
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Lovable AI error:", errorText);
-      throw new Error(`Lovable AI error: ${errorText}`);
+      const errorData = await response.json();
+      console.error("OpenAI API error:", errorData);
+      
+      // Check for quota exceeded error
+      if (errorData.error?.type === "insufficient_quota") {
+        return new Response(
+          JSON.stringify({
+            error: "OpenAI API quota exceeded. Please add credits to your OpenAI account or type your answers manually.",
+            code: "QUOTA_EXCEEDED"
+          }),
+          {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
+      throw new Error(errorData.error?.message || "OpenAI API error");
     }
 
     const result = await response.json();

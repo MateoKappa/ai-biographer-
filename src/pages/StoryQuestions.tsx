@@ -136,16 +136,24 @@ const StoryQuestions = () => {
       });
 
       // Transcribe audio
-      const { data: transcriptionData, error: transcriptionError } =
-        await supabase.functions.invoke("transcribe-audio", {
-          body: { audio: base64Audio },
-        });
+      const transcriptionResponse = await supabase.functions.invoke("transcribe-audio", {
+        body: { audio: base64Audio },
+      });
 
-      if (transcriptionError) {
-        console.error("Transcription error:", transcriptionError);
-        throw new Error(transcriptionError.message || "Failed to transcribe audio");
+      if (transcriptionResponse.error) {
+        console.error("Transcription error:", transcriptionResponse.error);
+        
+        // Check if it's a quota error
+        if (transcriptionResponse.error.message?.includes("quota") || 
+            transcriptionResponse.error.message?.includes("QUOTA_EXCEEDED")) {
+          throw new Error("OpenAI credits exhausted. Please type your answers manually or add credits to your OpenAI account.");
+        }
+        
+        throw new Error(transcriptionResponse.error.message || "Failed to transcribe audio");
       }
 
+      const transcriptionData = transcriptionResponse.data;
+      
       if (!transcriptionData?.text) {
         throw new Error("No transcription received");
       }
