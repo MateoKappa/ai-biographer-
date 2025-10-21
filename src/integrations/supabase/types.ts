@@ -49,6 +49,97 @@ export type Database = {
           },
         ]
       }
+      memory_captures: {
+        Row: {
+          answer_text: string
+          created_at: string
+          id: string
+          occurred_date: string | null
+          question_id: string
+          sentiment: string | null
+          tags: string[] | null
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_text: string
+          created_at?: string
+          id?: string
+          occurred_date?: string | null
+          question_id: string
+          sentiment?: string | null
+          tags?: string[] | null
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_text?: string
+          created_at?: string
+          id?: string
+          occurred_date?: string | null
+          question_id?: string
+          sentiment?: string | null
+          tags?: string[] | null
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_captures_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "template_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_captures_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "memory_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_captures_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memory_templates: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -105,6 +196,93 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      template_questions: {
+        Row: {
+          created_at: string
+          follow_up_hints: string | null
+          id: string
+          order_index: number
+          question_text: string
+          question_type: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          follow_up_hints?: string | null
+          id?: string
+          order_index: number
+          question_text: string
+          question_type: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          follow_up_hints?: string | null
+          id?: string
+          order_index?: number
+          question_text?: string
+          question_type?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_questions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "memory_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_template_progress: {
+        Row: {
+          completed_count: number
+          id: string
+          last_question_id: string | null
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_count?: number
+          id?: string
+          last_question_id?: string | null
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_count?: number
+          id?: string
+          last_question_id?: string | null
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_template_progress_last_question_id_fkey"
+            columns: ["last_question_id"]
+            isOneToOne: false
+            referencedRelation: "template_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_template_progress_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "memory_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_template_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

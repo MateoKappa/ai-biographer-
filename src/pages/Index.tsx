@@ -39,6 +39,9 @@ const Index = () => {
         <div className="flex gap-2">
           {user ? (
             <>
+              <Button variant="outline" onClick={() => navigate("/templates")}>
+                Memory Templates
+              </Button>
               <Button variant="outline" onClick={() => navigate("/create")}>
                 Create Story
               </Button>
