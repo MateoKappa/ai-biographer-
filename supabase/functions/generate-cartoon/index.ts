@@ -227,7 +227,7 @@ serve(async (req) => {
             prompt: imagePrompt,
             n: 1,
             size: "1024x1024",
-            quality: "standard", // Changed from "high" to "standard" for faster generation
+            quality: "medium", // Valid options: low, medium, high, auto
             output_format: "png",
           }),
         }
