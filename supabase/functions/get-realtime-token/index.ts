@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
@@ -29,7 +29,18 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
-        instructions: "You are a creative storytelling assistant helping someone develop their story idea into a cartoon. Ask thoughtful, engaging questions to understand: the main character, the setting, key events, the conflict or problem, and the story's mood. Be conversational, encouraging, and help them expand on their ideas. Keep questions natural and one at a time."
+        instructions: "You are a creative storytelling assistant helping someone develop their story idea into a cartoon. Ask thoughtful, engaging questions to understand: the main character, the setting, key events, the conflict or problem, and the story's mood. Be conversational, encouraging, and help them expand on their ideas. Keep questions natural and one at a time.",
+        input_audio_format: "pcm16",
+        output_audio_format: "pcm16",
+        input_audio_transcription: {
+          model: "whisper-1"
+        },
+        turn_detection: {
+          type: "server_vad",
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 1000
+        }
       }),
     });
 

@@ -19,6 +19,7 @@ const VoiceInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationEnded, setConversationEnded] = useState(false);
   const [isCreatingStory, setIsCreatingStory] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -33,6 +34,11 @@ const VoiceInterface = () => {
       cleanup();
     };
   }, []);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const cleanup = () => {
     dcRef.current?.close();
@@ -224,10 +230,21 @@ const VoiceInterface = () => {
 
       if (error) throw error;
 
-      toast.success('Story created! Adding details...');
+      toast.success('Story created! Generating your cartoon...');
       
-      // Navigate to questions page
-      navigate(`/story-questions/${storyData.id}`);
+      // For voice chat, skip questions and go directly to cartoon generation
+      const { error: genError } = await supabase.functions.invoke('generate-cartoon', {
+        body: { storyId: storyData.id }
+      });
+
+      if (genError) {
+        console.error('Error generating cartoon:', genError);
+        toast.error('Failed to start cartoon generation');
+        return;
+      }
+      
+      // Navigate to results page
+      navigate(`/results/${storyData.id}`);
     } catch (error) {
       console.error('Error creating story:', error);
       toast.error('Failed to create story');
@@ -244,14 +261,18 @@ const VoiceInterface = () => {
         </p>
       </div>
 
-      <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto">
-        {messages.map((msg, idx) => (
-          <Card key={idx} className={`p-4 ${msg.role === 'user' ? 'ml-8 bg-primary/10' : 'mr-8'}`}>
-            <p className="text-sm font-medium mb-1">{msg.role === 'user' ? 'You' : 'AI'}</p>
-            <p>{msg.content}</p>
-          </Card>
-        ))}
-      </div>
+      {messages.length > 0 && (
+        <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto p-4 bg-muted/30 rounded-lg">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-2">Conversation</h3>
+          {messages.map((msg, idx) => (
+            <Card key={idx} className={`p-4 ${msg.role === 'user' ? 'ml-8 bg-primary/10' : 'mr-8 bg-accent/10'}`}>
+              <p className="text-xs font-medium mb-1 text-muted-foreground">{msg.role === 'user' ? 'You' : 'AI Assistant'}</p>
+              <p className="text-sm">{msg.content}</p>
+            </Card>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      )}
 
       <div className="flex flex-col items-center gap-4">
         {conversationEnded ? (
