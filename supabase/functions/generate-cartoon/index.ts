@@ -33,6 +33,34 @@ serve(async (req) => {
 
     console.log("Story fetched:", story.story_text.substring(0, 100));
 
+    // Fetch the selected memories if any
+    let memoriesText = "";
+    if (story.memory_ids && story.memory_ids.length > 0) {
+      const { data: memories, error: memoriesError } = await supabase
+        .from("memory_captures")
+        .select("*, template_questions(question_text)")
+        .in("id", story.memory_ids);
+
+      if (memoriesError) {
+        console.error("Error fetching memories:", memoriesError);
+      } else if (memories) {
+        console.log(`Fetched ${memories.length} memories`);
+        memoriesText = memories
+          .map(
+            (m: any) =>
+              `${m.template_questions?.question_text}: ${m.answer_text}`
+          )
+          .join("\n\n");
+      }
+    }
+
+    // Combine story text and memories
+    const fullStory = memoriesText
+      ? `${story.story_text}\n\nBased on these memories:\n\n${memoriesText}`
+      : story.story_text;
+
+    console.log("Full story length:", fullStory.length);
+
     // Step 1: Use AI to split story into 2-4 scenes
     const scenesResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -48,11 +76,11 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You are a creative story analyzer. Split the user's story into 2-4 key scenes that would make great cartoon panels. Each scene should be a vivid description suitable for image generation. Return ONLY a JSON array of scene descriptions, nothing else.",
+                "You are a creative story analyzer. Split the user's story and memories into 2-4 key scenes that would make great cartoon panels. Each scene should be a vivid visual description based DIRECTLY on the memories provided, maintaining the same character throughout. Describe specific moments from the memories. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else.",
             },
             {
               role: "user",
-              content: `Split this story into 2-4 key scenes:\n\n${story.story_text}`,
+              content: `Create 2-4 cartoon scenes based on this story and memories. Each scene should depict a specific memory, maintaining the same character:\n\n${fullStory}`,
             },
           ],
         }),
@@ -98,7 +126,7 @@ serve(async (req) => {
       const sceneText = typeof sceneData === 'string' ? sceneData : sceneData.scene;
       console.log(`Generating image for scene ${i + 1}:`, sceneText.substring(0, 100));
 
-      const imagePrompt = `Create a colorful cartoon illustration in comic book style: ${sceneText}. Vibrant colors, bold outlines, friendly characters, suitable for all ages.`;
+      const imagePrompt = `Create a colorful cartoon illustration in comic book style depicting this scene: ${sceneText}. IMPORTANT: Keep the same character throughout all panels - maintain consistent appearance, age, and features. Vibrant colors, bold outlines, expressive characters, cinematic composition, suitable for all ages.`;
 
       const imageResponse = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
