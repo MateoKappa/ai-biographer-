@@ -52,36 +52,49 @@ const StoryQuestions = () => {
         // If no questions, skip this page and go straight to generation
         if (questions.length === 0) {
           console.log('No questions generated, skipping to cartoon generation');
+          
+          // Update story status to processing
+          await supabase
+            .from("stories")
+            .update({ status: "processing" })
+            .eq("id", storyId);
+          
           setLoading(false);
           
-          // Trigger cartoon generation directly
-          try {
-            await supabase.functions.invoke("generate-cartoon", {
-              body: { storyId },
-            });
-            navigate(`/results/${storyId}`);
-          } catch (genError) {
+          // Navigate immediately to results page
+          navigate(`/results/${storyId}`);
+          
+          // Trigger cartoon generation in background (fire-and-forget)
+          supabase.functions.invoke("generate-cartoon", {
+            body: { storyId },
+          }).catch((genError) => {
             console.error("Error generating cartoon:", genError);
-            toast.error("Failed to start cartoon generation");
-            setLoading(false);
-          }
+          });
+          
           return;
         }
       } catch (error) {
         console.error("Error fetching questions:", error);
         toast.error("Failed to generate questions. Skipping to cartoon generation...");
+        
+        // Update story status to processing
+        await supabase
+          .from("stories")
+          .update({ status: "processing" })
+          .eq("id", storyId);
+        
         setLoading(false);
         
-        // Try to generate cartoon anyway
-        try {
-          await supabase.functions.invoke("generate-cartoon", {
-            body: { storyId },
-          });
-          navigate(`/results/${storyId}`);
-        } catch (genError) {
+        // Navigate immediately to results page
+        navigate(`/results/${storyId}`);
+        
+        // Try to generate cartoon anyway (fire-and-forget)
+        supabase.functions.invoke("generate-cartoon", {
+          body: { storyId },
+        }).catch((genError) => {
           console.error("Error generating cartoon:", genError);
-          toast.error("Failed to start cartoon generation");
-        }
+        });
+        
         return;
       }
       
@@ -94,17 +107,21 @@ const StoryQuestions = () => {
   const handleSkip = async () => {
     setSubmitting(true);
     try {
-      // Trigger cartoon generation
-      const { error: functionError } = await supabase.functions.invoke(
-        "generate-cartoon",
-        {
-          body: { storyId },
-        }
-      );
+      // Update story status to processing
+      await supabase
+        .from("stories")
+        .update({ status: "processing" })
+        .eq("id", storyId);
 
-      if (functionError) throw functionError;
-
+      // Navigate immediately to results page
       navigate(`/results/${storyId}`);
+      
+      // Trigger cartoon generation in background (fire-and-forget)
+      supabase.functions.invoke("generate-cartoon", {
+        body: { storyId },
+      }).catch((error) => {
+        console.error("Error generating cartoon:", error);
+      });
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to start cartoon generation");
@@ -226,25 +243,26 @@ const StoryQuestions = () => {
         answer: answers[index] || "",
       }));
 
-      // Update story with answers
+      // Update story with answers and status to processing
       const { error: updateError } = await supabase
         .from("stories")
-        .update({ context_qa: contextQa })
+        .update({ 
+          context_qa: contextQa,
+          status: "processing"
+        })
         .eq("id", storyId);
 
       if (updateError) throw updateError;
 
-      // Trigger cartoon generation
-      const { error: functionError } = await supabase.functions.invoke(
-        "generate-cartoon",
-        {
-          body: { storyId },
-        }
-      );
-
-      if (functionError) throw functionError;
-
+      // Navigate immediately to results page
       navigate(`/results/${storyId}`);
+      
+      // Trigger cartoon generation in background (fire-and-forget)
+      supabase.functions.invoke("generate-cartoon", {
+        body: { storyId },
+      }).catch((error) => {
+        console.error("Error generating cartoon:", error);
+      });
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to submit answers");
