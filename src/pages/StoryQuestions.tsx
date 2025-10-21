@@ -243,10 +243,10 @@ const StoryQuestions = () => {
             Answer these questions to make your cartoon even better, or skip to
             continue
           </p>
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <Button
               onClick={isRecording ? stopRecording : startRecording}
-              variant={isRecording ? "destructive" : "default"}
+              variant={isRecording ? "destructive" : "outline"}
               size="lg"
               disabled={isProcessing || submitting}
               className="min-w-[200px]"
@@ -264,10 +264,13 @@ const StoryQuestions = () => {
               ) : (
                 <>
                   <Mic className="w-4 h-4 mr-2" />
-                  Record Your Story
+                  Record Your Story (Optional)
                 </>
               )}
             </Button>
+            <p className="text-xs text-muted-foreground">
+              Note: Voice recording requires OpenAI credits
+            </p>
           </div>
         </div>
 
