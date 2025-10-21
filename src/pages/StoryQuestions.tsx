@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 
 const StoryQuestions = () => {
@@ -14,6 +14,10 @@ const StoryQuestions = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -75,6 +79,88 @@ const StoryQuestions = () => {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+        await processAudio(audioBlob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.success("Recording started");
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast.error("Failed to start recording");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      toast.success("Recording stopped, processing...");
+    }
+  };
+
+  const processAudio = async (audioBlob: Blob) => {
+    setIsProcessing(true);
+    try {
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        const base64Audio = reader.result?.toString().split(",")[1];
+
+        if (!base64Audio) {
+          throw new Error("Failed to convert audio");
+        }
+
+        // Transcribe audio
+        const { data: transcriptionData, error: transcriptionError } =
+          await supabase.functions.invoke("transcribe-audio", {
+            body: { audio: base64Audio },
+          });
+
+        if (transcriptionError) throw transcriptionError;
+
+        const transcription = transcriptionData.text;
+        console.log("Transcription:", transcription);
+
+        // Analyze and match to questions
+        const { data: answersData, error: answersError } =
+          await supabase.functions.invoke("analyze-answers", {
+            body: { transcription, questions },
+          });
+
+        if (answersError) throw answersError;
+
+        // Prefill answers
+        setAnswers(answersData.answers);
+        toast.success("Answers prefilled from recording!");
+        setIsProcessing(false);
+      };
+    } catch (error) {
+      console.error("Error processing audio:", error);
+      toast.error("Failed to process recording");
+      setIsProcessing(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -130,10 +216,36 @@ const StoryQuestions = () => {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-3">
             Add More Details
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             Answer these questions to make your cartoon even better, or skip to
             continue
           </p>
+          <div className="flex justify-center">
+            <Button
+              onClick={isRecording ? stopRecording : startRecording}
+              variant={isRecording ? "destructive" : "default"}
+              size="lg"
+              disabled={isProcessing || submitting}
+              className="min-w-[200px]"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : isRecording ? (
+                <>
+                  <Square className="w-4 h-4 mr-2" />
+                  Stop Recording
+                </>
+              ) : (
+                <>
+                  <Mic className="w-4 h-4 mr-2" />
+                  Record Your Story
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-6">

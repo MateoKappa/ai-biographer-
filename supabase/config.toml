@@ -5,3 +5,9 @@ verify_jwt = true
 
 [functions.analyze-story]
 verify_jwt = true
+
+[functions.transcribe-audio]
+verify_jwt = true
+
+[functions.analyze-answers]
+verify_jwt = true
