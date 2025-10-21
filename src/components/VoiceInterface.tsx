@@ -223,7 +223,7 @@ const VoiceInterface = () => {
         .insert({
           user_id: session.user.id,
           story_text: storyText,
-          status: 'pending',
+          status: 'processing',
         })
         .select()
         .single();
@@ -232,23 +232,20 @@ const VoiceInterface = () => {
 
       toast.success('Story created! Generating your cartoon...');
       
-      // For voice chat, skip questions and go directly to cartoon generation
-      const { error: genError } = await supabase.functions.invoke('generate-cartoon', {
-        body: { storyId: storyData.id }
-      });
-
-      if (genError) {
-        console.error('Error generating cartoon:', genError);
-        toast.error('Failed to start cartoon generation');
-        return;
-      }
-      
-      // Navigate to results page
+      // Navigate immediately - the results page will poll for completion
       navigate(`/results/${storyData.id}`);
+      
+      // Trigger cartoon generation in the background (fire and forget)
+      supabase.functions.invoke('generate-cartoon', {
+        body: { storyId: storyData.id }
+      }).catch(err => {
+        console.error('Background generation error:', err);
+        // Don't show error toast since we already navigated
+      });
+      
     } catch (error) {
       console.error('Error creating story:', error);
       toast.error('Failed to create story');
-    } finally {
       setIsCreatingStory(false);
     }
   };
