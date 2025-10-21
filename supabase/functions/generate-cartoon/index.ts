@@ -204,8 +204,14 @@ serve(async (req) => {
       return { sceneText, order_index: i };
     });
 
-    // Generate all images in parallel
-    const imageGenerationPromises = scenesWithText.map(async ({ sceneText, order_index }) => {
+    // Generate and save images ONE BY ONE for real-time updates
+    console.log(`🎨 STEP 3/3: Generating ${scenes.length} cartoon images one by one...`);
+    
+    const panels: Array<{ scene: string; imageUrl: string; order_index: number }> = [];
+    
+    for (let i = 0; i < scenesWithText.length; i++) {
+      const { sceneText, order_index } = scenesWithText[i];
+      
       console.log(`🖼️  Panel ${order_index + 1}/${scenes.length}: Starting image generation...`);
       console.log(`   Scene: ${sceneText.substring(0, 100)}${sceneText.length > 100 ? '...' : ''}`);
 
@@ -249,18 +255,8 @@ serve(async (req) => {
         throw new Error("Failed to get image URL from OpenAI");
       }
 
-      return { sceneText, imageUrl, order_index };
-    });
-
-    // Wait for all images to be generated
-    console.log("⏳ Waiting for all images to complete...");
-    const generatedImages = await Promise.all(imageGenerationPromises);
-    console.log("✅ All images generated!");
-
-    // Now save all panels to database
-    console.log("💾 Saving all panels to database...");
-    const panels: Array<{ scene: string; imageUrl: string; order_index: number }> = [];
-    for (const { sceneText, imageUrl, order_index } of generatedImages) {
+      // Save to database immediately so user sees it via real-time
+      console.log(`💾 Saving panel ${order_index + 1} to database...`);
       const { error: panelError } = await supabase
         .from("cartoon_panels")
         .insert({
@@ -275,9 +271,9 @@ serve(async (req) => {
         throw panelError;
       }
 
+      console.log(`✅ Panel ${order_index + 1} saved! User should see it now.`);
       panels.push({ scene: sceneText, imageUrl, order_index });
     }
-    console.log("✅ All panels saved to database");
 
     // Update story status to complete
     console.log("🎉 All panels complete! Finalizing...");
