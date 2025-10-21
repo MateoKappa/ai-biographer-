@@ -101,13 +101,6 @@ export type Database = {
             referencedRelation: "memory_templates"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "memory_captures_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       memory_templates: {
@@ -273,13 +266,6 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "memory_templates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_template_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
