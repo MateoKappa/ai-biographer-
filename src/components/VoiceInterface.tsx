@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Loader2, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -11,10 +12,13 @@ interface Message {
 }
 
 const VoiceInterface = () => {
+  const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationEnded, setConversationEnded] = useState(false);
+  const [isCreatingStory, setIsCreatingStory] = useState(false);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -176,7 +180,60 @@ const VoiceInterface = () => {
     cleanup();
     setIsConnected(false);
     setIsSpeaking(false);
-    toast.success('Conversation ended');
+    
+    if (messages.length > 0) {
+      setConversationEnded(true);
+      toast.success('Conversation ended - ready to create your story!');
+    } else {
+      toast.success('Conversation ended');
+      setConversationEnded(false);
+    }
+  };
+
+  const continueConversation = () => {
+    setConversationEnded(false);
+    startConversation();
+  };
+
+  const createStory = async () => {
+    try {
+      setIsCreatingStory(true);
+      
+      // Get current user
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast.error('Please sign in to create a story');
+        return;
+      }
+
+      // Combine all messages into story text
+      const storyText = messages
+        .map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`)
+        .join('\n\n');
+
+      // Create story record
+      const { data: storyData, error } = await supabase
+        .from('stories')
+        .insert({
+          user_id: session.user.id,
+          story_text: storyText,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Story created! Adding details...');
+      
+      // Navigate to questions page
+      navigate(`/story-questions/${storyData.id}`);
+    } catch (error) {
+      console.error('Error creating story:', error);
+      toast.error('Failed to create story');
+    } finally {
+      setIsCreatingStory(false);
+    }
   };
 
   return (
@@ -197,7 +254,40 @@ const VoiceInterface = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        {!isConnected ? (
+        {conversationEnded ? (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-sm text-center text-muted-foreground">
+              Ready to turn your conversation into a cartoon?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={continueConversation}
+                variant="outline"
+                size="lg"
+              >
+                <Mic className="w-4 h-4 mr-2" />
+                Continue Conversation
+              </Button>
+              <Button
+                onClick={createStory}
+                disabled={isCreatingStory}
+                size="lg"
+              >
+                {isCreatingStory ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Create Story
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : !isConnected ? (
           <Button
             onClick={startConversation}
             disabled={isConnecting}
@@ -237,9 +327,11 @@ const VoiceInterface = () => {
             </Button>
           </div>
         )}
-        <p className="text-xs text-muted-foreground text-center max-w-xs">
-          Note: Voice chat requires OpenAI credits
-        </p>
+        {!conversationEnded && (
+          <p className="text-xs text-muted-foreground text-center max-w-xs">
+            Note: Voice chat requires OpenAI credits
+          </p>
+        )}
       </div>
     </div>
   );
