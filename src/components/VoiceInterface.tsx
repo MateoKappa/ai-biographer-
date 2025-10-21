@@ -42,7 +42,11 @@ const VoiceInterface = () => {
       console.log('Getting ephemeral token...');
       
       // Get ephemeral token from our edge function
-      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-realtime-token');
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-realtime-token', {
+        body: {}
+      });
+      
+      console.log('Token response:', { tokenData, tokenError });
       
       if (tokenError) {
         console.error('Token error:', tokenError);
