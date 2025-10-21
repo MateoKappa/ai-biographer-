@@ -111,12 +111,12 @@ const Results = () => {
 
   if (loading || status === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="comic-panel p-8 text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <h2 className="text-2xl font-bold mb-2">Creating Your Cartoon...</h2>
-          <p className="text-muted-foreground">
-            This magical process takes about 30-60 seconds
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
+        <Card className="card-glass p-10 text-center max-w-md animate-scale-in">
+          <Loader2 className="h-16 w-16 animate-spin mx-auto mb-6 text-primary" />
+          <h2 className="text-3xl font-bold mb-3 gradient-text">Creating Your Cartoon...</h2>
+          <p className="text-muted-foreground text-lg">
+            This magical process takes about 30-60 seconds ✨
           </p>
         </Card>
       </div>
@@ -124,34 +124,34 @@ const Results = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8 bg-gradient-to-b from-background via-muted/20 to-background">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <Button variant="ghost" onClick={() => navigate("/")}>
+          <Button variant="ghost" onClick={() => navigate("/")} className="hover:bg-primary/10">
             ← Back to Home
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleDownload}>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={handleDownload} className="hover:shadow-lg">
               <Download className="h-4 w-4 mr-2" />
               Download
             </Button>
-            <Button variant="outline" onClick={handleShare}>
+            <Button variant="outline" onClick={handleShare} className="hover:shadow-lg">
               <Share2 className="h-4 w-4 mr-2" />
               Share
             </Button>
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-center mb-2">Your Cartoon Story</h1>
-        <p className="text-center text-muted-foreground mb-12">
-          Scroll down to see your story come to life!
+        <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">Your Cartoon Story</h1>
+        <p className="text-center text-muted-foreground mb-16 text-lg">
+          Scroll down to see your story come to life! ✨
         </p>
 
-        <div className="space-y-8">
+        <div className="space-y-10">
           {panels.map((panel, index) => (
             <Card
               key={panel.id}
-              className="comic-panel animate-slide-up overflow-hidden"
+              className="card-clean animate-slide-up overflow-hidden hover:shadow-2xl transition-all duration-300"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardContent className="p-0">
@@ -161,8 +161,8 @@ const Results = () => {
                   className="w-full h-auto"
                   loading="lazy"
                 />
-                <div className="p-6 gradient-card">
-                  <p className="text-lg italic">{panel.scene_text}</p>
+                <div className="p-8 bg-gradient-to-b from-card to-muted/20">
+                  <p className="text-lg italic leading-relaxed">{panel.scene_text}</p>
                 </div>
               </CardContent>
             </Card>
@@ -170,15 +170,15 @@ const Results = () => {
         </div>
 
         {panels.length === 0 && (
-          <Card className="comic-panel p-8 text-center">
-            <p className="text-muted-foreground">
+          <Card className="card-glass p-10 text-center">
+            <p className="text-muted-foreground text-lg">
               No panels generated yet. This might be an error.
             </p>
           </Card>
         )}
 
-        <div className="mt-12 text-center">
-          <Button size="lg" onClick={() => navigate("/create")}>
+        <div className="mt-16 text-center">
+          <Button size="lg" variant="gradient" onClick={() => navigate("/create")} className="btn-glow">
             <Plus className="h-5 w-5 mr-2" />
             Create Another Story
           </Button>

@@ -140,23 +140,23 @@ const StoryInput = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8 bg-gradient-to-b from-background to-muted/30">
       <div className="max-w-3xl mx-auto">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="mb-6"
+          className="mb-6 hover:bg-primary/10"
         >
           ← Back to Home
         </Button>
 
-        <Card className="comic-panel animate-slide-up">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl flex items-center justify-center gap-2">
-              <Sparkles className="h-8 w-8 text-accent" />
+        <Card className="card-clean animate-slide-up">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-4xl flex items-center justify-center gap-3 gradient-text mb-2">
+              <Sparkles className="h-10 w-10" />
               Tell Your Story
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-base">
               Write a short story and watch it transform into a cartoon!
             </CardDescription>
           </CardHeader>

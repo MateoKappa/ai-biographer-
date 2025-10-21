@@ -89,13 +89,14 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 gradient-hero">
-      <Card className="w-full max-w-md comic-panel">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl">
+    <div className="min-h-screen flex items-center justify-center p-4 gradient-hero relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/20"></div>
+      <Card className="w-full max-w-md card-glass relative z-10 animate-scale-in">
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="text-4xl mb-2">
             {isLogin ? "Welcome Back!" : "Create Account"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-base">
             {isLogin
               ? "Sign in to continue your story adventures"
               : "Join us to create amazing cartoon stories"}

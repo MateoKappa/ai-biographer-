@@ -53,23 +53,23 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="gradient-hero text-primary-foreground py-20 md:py-32 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="gradient-hero text-white py-24 md:py-40 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/10"></div>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-block animate-float mb-6">
-            <Sparkles className="h-16 w-16 mx-auto" />
+            <Sparkles className="h-20 w-20 mx-auto drop-shadow-2xl" />
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 animate-slide-up drop-shadow-lg">
             Turn Your Life Story Into a Cartoon
           </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90 animate-slide-up">
-            Transform your memories into delightful cartoon panels in seconds.
-            Powered by AI magic! ✨
+          <p className="text-xl md:text-2xl mb-10 opacity-95 animate-slide-up max-w-2xl mx-auto">
+            Transform your memories into delightful cartoon panels in seconds with AI magic ✨
           </p>
           <Button
             size="lg"
-            variant="secondary"
+            variant="gradient"
             onClick={() => navigate(user ? "/create" : "/auth")}
-            className="text-lg px-8 py-6 animate-slide-up"
+            className="text-lg animate-slide-up btn-glow"
           >
             <Sparkles className="mr-2 h-5 w-5" />
             {user ? "Start Your Story" : "Get Started"}
@@ -78,45 +78,43 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4">
+      <section className="py-24 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12">How It Works</h2>
+          <h2 className="text-5xl font-bold text-center mb-4 gradient-text">How It Works</h2>
+          <p className="text-center text-muted-foreground mb-16 text-lg">Three simple steps to cartoon magic</p>
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="comic-panel animate-slide-up">
-              <CardContent className="p-6 text-center">
-                <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                  <BookOpen className="h-8 w-8 text-primary" />
+            <Card className="card-clean animate-slide-up hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardContent className="p-8 text-center">
+                <div className="h-20 w-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                  <BookOpen className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">1. Write Your Story</h3>
-                <p className="text-muted-foreground">
-                  Share your memory or creative tale in up to 300 words. Add a
-                  photo for extra personalization!
+                <h3 className="text-2xl font-bold mb-3">1. Write Your Story</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Share your memory or creative tale in up to 300 words. Add a photo for extra personalization!
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="comic-panel animate-slide-up" style={{ animationDelay: "0.1s" }}>
-              <CardContent className="p-6 text-center">
-                <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Zap className="h-8 w-8 text-accent" />
+            <Card className="card-clean animate-slide-up hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: "0.1s" }}>
+              <CardContent className="p-8 text-center">
+                <div className="h-20 w-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg">
+                  <Zap className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">2. AI Works Magic</h3>
-                <p className="text-muted-foreground">
-                  Our AI analyzes your story and creates 2-4 key scenes in
-                  beautiful cartoon style.
+                <h3 className="text-2xl font-bold mb-3">2. AI Works Magic</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Our AI analyzes your story and creates 2-4 key scenes in beautiful cartoon style.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="comic-panel animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <CardContent className="p-6 text-center">
-                <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <Image className="h-8 w-8 text-secondary-foreground" />
+            <Card className="card-clean animate-slide-up hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: "0.2s" }}>
+              <CardContent className="p-8 text-center">
+                <div className="h-20 w-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center shadow-lg">
+                  <Image className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">3. Get Your Cartoon</h3>
-                <p className="text-muted-foreground">
-                  View, download, and share your personalized cartoon story with
-                  friends and family!
+                <h3 className="text-2xl font-bold mb-3">3. Get Your Cartoon</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  View, download, and share your personalized cartoon story with friends and family!
                 </p>
               </CardContent>
             </Card>
@@ -125,16 +123,18 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-muted">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-4">Ready to Create?</h2>
-          <p className="text-xl text-muted-foreground mb-8">
+      <section className="py-24 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 gradient-accent opacity-10"></div>
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <h2 className="text-5xl font-bold mb-4 gradient-text">Ready to Create?</h2>
+          <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
             Join thousands bringing their stories to life in cartoon form!
           </p>
           <Button
             size="lg"
+            variant="gradient"
             onClick={() => navigate(user ? "/create" : "/auth")}
-            className="text-lg px-8 py-6"
+            className="text-lg btn-glow"
           >
             <Sparkles className="mr-2 h-5 w-5" />
             Create Your First Cartoon
