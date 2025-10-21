@@ -68,7 +68,7 @@ serve(async (req) => {
     const scenesData = await scenesResponse.json();
     console.log("Scenes response:", scenesData);
 
-    let scenes: string[];
+    let scenes: any[];
     try {
       const content = scenesData.choices[0].message.content;
       // Try to extract JSON from the response
@@ -84,7 +84,8 @@ serve(async (req) => {
       scenes = story.story_text
         .split(/[.!?]+/)
         .filter((s: string) => s.trim().length > 20)
-        .slice(0, 3);
+        .slice(0, 3)
+        .map((s: string) => ({ scene: s.trim() }));
     }
 
     console.log(`Generated ${scenes.length} scenes`);
@@ -92,10 +93,12 @@ serve(async (req) => {
     // Step 2: Generate cartoon image for each scene
     const panels = [];
     for (let i = 0; i < scenes.length; i++) {
-      const scene = scenes[i];
-      console.log(`Generating image for scene ${i + 1}:`, scene.substring(0, 100));
+      const sceneData = scenes[i];
+      // Handle both object format and string format
+      const sceneText = typeof sceneData === 'string' ? sceneData : sceneData.scene;
+      console.log(`Generating image for scene ${i + 1}:`, sceneText.substring(0, 100));
 
-      const imagePrompt = `Create a colorful cartoon illustration in comic book style: ${scene}. Vibrant colors, bold outlines, friendly characters, suitable for all ages.`;
+      const imagePrompt = `Create a colorful cartoon illustration in comic book style: ${sceneText}. Vibrant colors, bold outlines, friendly characters, suitable for all ages.`;
 
       const imageResponse = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -141,7 +144,7 @@ serve(async (req) => {
         .from("cartoon_panels")
         .insert({
           story_id: storyId,
-          scene_text: scene,
+          scene_text: sceneText,
           image_url: imageUrl,
           order_index: i,
         });
@@ -151,7 +154,7 @@ serve(async (req) => {
         throw panelError;
       }
 
-      panels.push({ scene, imageUrl, order_index: i });
+      panels.push({ scene: sceneText, imageUrl, order_index: i });
     }
 
     // Update story status to complete
