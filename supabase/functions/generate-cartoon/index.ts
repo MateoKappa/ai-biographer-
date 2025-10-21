@@ -1,3 +1,4 @@
+// @ts-ignore: Deno is available in Supabase Edge Functions runtime
 import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -82,7 +83,7 @@ serve(async (req) => {
     // Step 0.5: If this looks like a conversation transcript, extract the actual story first
     let processedStory = fullStory;
     if (fullStory.includes("User:") || fullStory.includes("AI:")) {
-      console.log("Detected conversation format, extracting story...");
+      console.log("📝 STEP 1/3: Detected conversation format, extracting story content...");
       
       const extractResponse = await fetch(
         "https://api.openai.com/v1/chat/completions",
@@ -112,11 +113,16 @@ serve(async (req) => {
       if (extractResponse.ok) {
         const extractData = await extractResponse.json();
         processedStory = extractData.choices[0].message.content;
-        console.log("Extracted story:", processedStory.substring(0, 200));
+        console.log("✅ Story extracted successfully:", processedStory.substring(0, 200) + "...");
+      } else {
+        console.log("⚠️ Story extraction failed, using original text");
       }
+    } else {
+      console.log("📖 Using original story text (not a conversation)");
     }
 
     // Step 1: Use AI to split story into 2-4 scenes
+    console.log("🎬 STEP 2/3: Analyzing story and creating scenes...");
     const scenesResponse = await fetch(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -131,11 +137,11 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You are a creative story analyzer. Split the story into 2-4 key scenes that would make great cartoon panels. Each scene should be a vivid visual description maintaining the same character throughout. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else. Format: [\"scene 1 description\", \"scene 2 description\", ...]",
+                "You are a creative story analyzer. Split the story into 2-3 key scenes that would make great cartoon panels. Each scene should be a vivid visual description maintaining the same character throughout. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else. Format: [\"scene 1 description\", \"scene 2 description\", ...]",
             },
             {
               role: "user",
-              content: `Create 2-4 cartoon scenes based on this story:\n\n${processedStory}`,
+              content: `Create 2-3 cartoon scenes based on this story:\n\n${processedStory}`,
             },
           ],
         }),
@@ -171,29 +177,32 @@ serve(async (req) => {
         .map((s: string) => ({ scene: s.trim() }));
     }
 
-    console.log(`Generated ${scenes.length} scenes`);
+    console.log(`✅ Generated ${scenes.length} scenes for the cartoon`);
 
-    // Step 2: Generate cartoon image for each scene
-    const panels = [];
-    for (let i = 0; i < scenes.length; i++) {
-      const sceneData = scenes[i];
-      
-      // Handle different scene formats
+    // Step 2: Generate cartoon images for all scenes IN PARALLEL for speed
+    console.log(`🎨 STEP 3/3: Generating ${scenes.length} cartoon images IN PARALLEL...`);
+    
+    // Prepare all scene texts first
+    const scenesWithText = scenes.map((sceneData, i) => {
       let sceneText: string;
       if (typeof sceneData === 'string') {
         sceneText = sceneData;
       } else if (sceneData.scene) {
         sceneText = sceneData.scene;
       } else if (sceneData.setting && sceneData.action) {
-        // Handle structured format with setting, action, emotion
         sceneText = `${sceneData.setting} ${sceneData.action}`;
         if (sceneData.emotion) sceneText += ` ${sceneData.emotion}`;
       } else {
         console.error("Unknown scene format:", sceneData);
         sceneText = JSON.stringify(sceneData);
       }
-      
-      console.log(`Generating image for scene ${i + 1}:`, sceneText.substring(0, 100));
+      return { sceneText, order_index: i };
+    });
+
+    // Generate all images in parallel
+    const imageGenerationPromises = scenesWithText.map(async ({ sceneText, order_index }) => {
+      console.log(`🖼️  Panel ${order_index + 1}/${scenes.length}: Starting image generation...`);
+      console.log(`   Scene: ${sceneText.substring(0, 100)}${sceneText.length > 100 ? '...' : ''}`);
 
       const imagePrompt = `Create a colorful cartoon illustration in comic book style depicting this scene: ${sceneText}. IMPORTANT: Keep the same character throughout all panels - maintain consistent appearance, age, and features. Vibrant colors, bold outlines, expressive characters, cinematic composition, suitable for all ages.`;
 
@@ -210,7 +219,7 @@ serve(async (req) => {
             prompt: imagePrompt,
             n: 1,
             size: "1024x1024",
-            quality: "high",
+            quality: "standard", // Changed from "high" to "standard" for faster generation
             output_format: "png",
           }),
         }
@@ -218,12 +227,12 @@ serve(async (req) => {
 
       if (!imageResponse.ok) {
         const errorText = await imageResponse.text();
-        console.error(`Image generation error for scene ${i}:`, errorText);
-        throw new Error(`Failed to generate image: ${errorText}`);
+        console.error(`Image generation error for scene ${order_index}:`, errorText);
+        throw new Error(`Failed to generate image for panel ${order_index + 1}: ${errorText}`);
       }
 
       const imageData = await imageResponse.json();
-      console.log(`Image generated for scene ${i + 1}`);
+      console.log(`✅ Panel ${order_index + 1}/${scenes.length}: Image generated successfully`);
 
       // Extract the base64 image from OpenAI response
       const imageUrl = imageData.data?.[0]?.b64_json 
@@ -235,25 +244,38 @@ serve(async (req) => {
         throw new Error("Failed to get image URL from OpenAI");
       }
 
-      // Store the panel in database
+      return { sceneText, imageUrl, order_index };
+    });
+
+    // Wait for all images to be generated
+    console.log("⏳ Waiting for all images to complete...");
+    const generatedImages = await Promise.all(imageGenerationPromises);
+    console.log("✅ All images generated!");
+
+    // Now save all panels to database
+    console.log("💾 Saving all panels to database...");
+    const panels: Array<{ scene: string; imageUrl: string; order_index: number }> = [];
+    for (const { sceneText, imageUrl, order_index } of generatedImages) {
       const { error: panelError } = await supabase
         .from("cartoon_panels")
         .insert({
           story_id: storyId,
           scene_text: sceneText,
           image_url: imageUrl,
-          order_index: i,
+          order_index,
         });
 
       if (panelError) {
-        console.error("Panel insert error:", panelError);
+        console.error("❌ Panel insert error:", panelError);
         throw panelError;
       }
 
-      panels.push({ scene: sceneText, imageUrl, order_index: i });
+      panels.push({ scene: sceneText, imageUrl, order_index });
     }
+    console.log("✅ All panels saved to database");
 
     // Update story status to complete
+    console.log("🎉 All panels complete! Finalizing...");
     const { error: updateError } = await supabase
       .from("stories")
       .update({ status: "complete" })
@@ -261,7 +283,7 @@ serve(async (req) => {
 
     if (updateError) throw updateError;
 
-    console.log("Cartoon generation complete!");
+    console.log("✨ SUCCESS! Cartoon generation complete!");
 
     return new Response(
       JSON.stringify({

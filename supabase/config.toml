@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.get-realtime-token]
 verify_jwt = false
+
+[functions.filter-conversation]
+verify_jwt = true

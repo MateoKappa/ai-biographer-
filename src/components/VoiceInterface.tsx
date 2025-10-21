@@ -98,6 +98,19 @@ const VoiceInterface = () => {
       
       dcRef.current.addEventListener("open", () => {
         console.log("Data channel opened");
+        
+        // Enable input audio transcription
+        const sessionConfig = {
+          type: "session.update",
+          session: {
+            turn_detection: { type: "server_vad" },
+            input_audio_transcription: {
+              model: "whisper-1"
+            }
+          }
+        };
+        dcRef.current?.send(JSON.stringify(sessionConfig));
+        
         setIsConnected(true);
         setIsConnecting(false);
         toast.success("Voice conversation started!");
@@ -113,6 +126,7 @@ const VoiceInterface = () => {
           } else if (event.type === 'response.audio.done') {
             setIsSpeaking(false);
           } else if (event.type === 'conversation.item.input_audio_transcription.completed') {
+            console.log('User transcription:', event.transcript);
             setMessages(prev => [...prev, { role: 'user', content: event.transcript }]);
           } else if (event.type === 'response.audio_transcript.delta') {
             setMessages(prev => {
@@ -201,6 +215,32 @@ const VoiceInterface = () => {
     startConversation();
   };
 
+  const extractStoryPrompt = async (conversationMessages: Message[]): Promise<string> => {
+    const conversationText = conversationMessages
+      .map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`)
+      .join('\n\n');
+
+    console.log('Calling filter-conversation with text:', conversationText.substring(0, 200));
+
+    const { data, error } = await supabase.functions.invoke('filter-conversation', {
+      body: { conversationText }
+    });
+
+    console.log('Filter response:', { data, error });
+
+    if (error) {
+      console.error('Filter error details:', error);
+      throw error;
+    }
+    
+    if (!data || !data.storyPrompt) {
+      console.error('No story prompt in response:', data);
+      throw new Error('Failed to get story prompt from filter');
+    }
+    
+    return data.storyPrompt;
+  };
+
   const createStory = async () => {
     try {
       setIsCreatingStory(true);
@@ -212,17 +252,29 @@ const VoiceInterface = () => {
         return;
       }
 
-      // Combine all messages into story text
-      const storyText = messages
-        .map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`)
-        .join('\n\n');
+      // Extract clean story prompt using AI
+      let storyPrompt: string;
+      
+      // Try to filter the conversation, but don't block if it fails
+      try {
+        toast.info('Processing your conversation...');
+        storyPrompt = await extractStoryPrompt(messages);
+        console.log('Filtered story prompt:', storyPrompt);
+        toast.success('Conversation processed!');
+      } catch (filterError) {
+        console.warn('Filtering not available, using raw conversation:', filterError);
+        // Fallback to raw conversation if filtering fails (e.g., function not deployed)
+        storyPrompt = messages
+          .map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`)
+          .join('\n\n');
+      }
 
-      // Create story record
+      // Create story record with filtered prompt
       const { data: storyData, error } = await supabase
         .from('stories')
         .insert({
           user_id: session.user.id,
-          story_text: storyText,
+          story_text: storyPrompt,
           status: 'processing',
         })
         .select()
@@ -230,16 +282,20 @@ const VoiceInterface = () => {
 
       if (error) throw error;
 
+      console.log('✅ Story record created with ID:', storyData.id);
       toast.success('Story created! Generating your cartoon...');
       
       // Navigate immediately - the results page will poll for completion
       navigate(`/results/${storyData.id}`);
       
       // Trigger cartoon generation in the background (fire and forget)
+      console.log('🚀 Invoking generate-cartoon edge function...');
       supabase.functions.invoke('generate-cartoon', {
         body: { storyId: storyData.id }
+      }).then(() => {
+        console.log('📤 Generate-cartoon function invoked successfully');
       }).catch(err => {
-        console.error('Background generation error:', err);
+        console.error('❌ Background generation error:', err);
         // Don't show error toast since we already navigated
       });
       
