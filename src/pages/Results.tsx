@@ -182,7 +182,7 @@ const Results = () => {
           <Card className="card-glass p-10 text-center mb-10 animate-pulse">
             <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
             <p className="text-muted-foreground text-lg">
-              Creating your first panel... This takes about 20-30 seconds per panel
+              Creating your panels... This takes 30 to 60 seconds
             </p>
           </Card>
         )}
