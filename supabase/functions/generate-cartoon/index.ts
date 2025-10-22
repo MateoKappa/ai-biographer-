@@ -62,7 +62,7 @@ serve(async (req) => {
               {
                 role: "system",
                 content:
-                  `You are a storytelling expert. You will receive ${userPanels.length} panel descriptions. Convert them into ${userPanels.length} SHORT (1-2 sentences max), CONNECTED story descriptions that flow together like a narrative. Each description should tell WHAT HAPPENS in that moment of the story. They should read like: "First...", "Then...", "Finally..." - a story you'd tell someone. Return ONLY a JSON array of ${userPanels.length} SHORT story descriptions. Format: ["First moment...", "Second moment...", "Final moment..."]`,
+                  `You are a storytelling expert. You will receive ${userPanels.length} panel descriptions. Convert them into ${userPanels.length} DETAILED (3-4 sentences each), CONNECTED story descriptions that flow together like a narrative. Each description should tell WHAT HAPPENS in that moment of the story with vivid details, emotions, and atmosphere. They should read like: "First...", "Then...", "Finally..." - a fun, engaging story you'd tell someone. Make it colorful and immersive! Return ONLY a JSON array of ${userPanels.length} story descriptions. Format: ["First moment with details...", "Second moment with details...", "Final moment with details..."]`,
               },
               {
                 role: "user",
