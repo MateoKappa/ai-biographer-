@@ -158,30 +158,30 @@ const BiographySettings = () => {
           </div>
 
           <div className="space-y-8">
-            {/* Temperature Setting */}
-            <div>
-              <Label className="text-lg font-semibold mb-4 block">
-                AI Creativity (Temperature)
-              </Label>
-              <p className="text-sm text-muted-foreground mb-4">
-                Lower values make the biography more factual and literal. Higher values add more creative interpretation.
-              </p>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground min-w-[80px]">Factual (0.0)</span>
-                <Slider
-                  value={[temperature]}
-                  onValueChange={(value) => setTemperature(value[0])}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  className="flex-1"
-                />
-                <span className="text-sm text-muted-foreground min-w-[80px] text-right">Creative (1.0)</span>
-              </div>
-              <p className="text-center mt-2 font-semibold text-primary">
-                Current: {temperature.toFixed(1)}
-              </p>
+          <div>
+            <Label className="text-lg font-semibold mb-4 block">
+              AI Creativity (Temperature)
+            </Label>
+            <p className="text-sm text-muted-foreground mb-4">
+              Note: This setting is saved but currently not applied due to model limitations. The biography will use the default creativity level.
+            </p>
+            <div className="flex items-center gap-4 opacity-50">
+              <span className="text-sm text-muted-foreground min-w-[80px]">Factual (0.0)</span>
+              <Slider
+                value={[temperature]}
+                onValueChange={(value) => setTemperature(value[0])}
+                min={0}
+                max={1}
+                step={0.1}
+                className="flex-1"
+                disabled
+              />
+              <span className="text-sm text-muted-foreground min-w-[80px] text-right">Creative (1.0)</span>
             </div>
+            <p className="text-center mt-2 font-semibold text-muted-foreground">
+              Current: {temperature.toFixed(1)} (not applied)
+            </p>
+          </div>
 
             {/* Panels Setting */}
             <div>

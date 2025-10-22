@@ -64,7 +64,6 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             model: "gpt-5-mini-2025-08-07",
-            temperature: TEMPERATURE,
             messages: [
               {
                 role: "system",
@@ -274,7 +273,6 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
           },
           body: JSON.stringify({
             model: "gpt-5-mini-2025-08-07",
-            temperature: TEMPERATURE,
             messages: [
               {
                 role: "system",
@@ -313,7 +311,6 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
         },
         body: JSON.stringify({
           model: "gpt-5-mini-2025-08-07",
-          temperature: TEMPERATURE,
           messages: [
             {
               role: "system",
@@ -372,7 +369,6 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
         },
         body: JSON.stringify({
           model: "gpt-5-mini-2025-08-07",
-          temperature: TEMPERATURE,
           messages: [
             {
               role: "system",
