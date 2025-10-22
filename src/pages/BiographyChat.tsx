@@ -300,10 +300,10 @@ const BiographyChat = () => {
 
           {status === "disconnected" && !isUsingTemplate ? (
             <div className="text-center py-12">
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-10">
+              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-10">
                 {/* Live Interview Option */}
-                <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50">
-                  <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 bg-gradient-to-br from-card to-card/50">
+                  <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
                     <Mic className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold mb-3">Live Voice Interview</h3>
@@ -339,40 +339,60 @@ const BiographyChat = () => {
                 </Card>
 
                 {/* Template Option */}
-                {templateStory && (
-                  <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-secondary/50">
-                    <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-3">Use Previous Biography</h3>
-                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                      Skip the interview and use your previous biography as a starting point. View the conversation and proceed to customization.
-                    </p>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/10 mb-6">
-                      <Sparkles className="h-4 w-4 text-secondary" />
-                      <span className="text-xs font-medium text-secondary">Quick & Easy</span>
-                    </div>
-                    <Button 
-                      variant="outline"
-                      size="lg"
-                      onClick={useTemplate}
-                      disabled={isGenerating}
-                      className="w-full border-2"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="mr-2 h-5 w-5" />
-                          Use Template
-                        </>
-                      )}
-                    </Button>
-                  </Card>
-                )}
+                <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-secondary/50 bg-gradient-to-br from-card to-card/50">
+                  <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+                    <Sparkles className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">Use Previous Biography</h3>
+                  {templateStory ? (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                        Skip the interview and use your previous biography as a starting point. View the conversation and proceed to customization.
+                      </p>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/10 mb-6">
+                        <Sparkles className="h-4 w-4 text-secondary" />
+                        <span className="text-xs font-medium text-secondary">Quick & Easy</span>
+                      </div>
+                      <Button 
+                        variant="outline"
+                        size="lg"
+                        onClick={useTemplate}
+                        disabled={isGenerating}
+                        className="w-full border-2"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-5 w-5" />
+                            Use Template
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                        Complete your first biography to unlock this feature. You'll be able to reuse your previous story as a template.
+                      </p>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 mb-6">
+                        <span className="text-xs font-medium text-muted-foreground">Available after first biography</span>
+                      </div>
+                      <Button 
+                        variant="outline"
+                        size="lg"
+                        disabled
+                        className="w-full border-2"
+                      >
+                        <Sparkles className="mr-2 h-5 w-5" />
+                        Use Template
+                      </Button>
+                    </>
+                  )}
+                </Card>
               </div>
             </div>
           ) : (
