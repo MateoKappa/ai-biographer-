@@ -23,6 +23,7 @@ const Results = () => {
   const [storyText, setStoryText] = useState("");
   const [status, setStatus] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isBiography, setIsBiography] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -79,6 +80,7 @@ const Results = () => {
 
       setStoryText(story.story_text);
       setStatus(story.status);
+      setIsBiography(!story.memory_ids || story.memory_ids.length === 0);
 
       // If still processing, poll for updates
       if (story.status === "processing") {
@@ -267,11 +269,17 @@ const Results = () => {
           </div>
         </div>
 
-        <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">Your Preserved Memory</h1>
+        <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">
+          {isBiography ? "Your Life Story" : "Your Preserved Memory"}
+        </h1>
         <p className="text-center text-muted-foreground mb-16 text-lg">
           {status === "processing" 
-            ? "Your memory is being transformed into a beautiful cartoon! ✨" 
-            : "A moment frozen in time, preserved forever ✨"
+            ? isBiography 
+              ? "Your biography is being transformed into a beautiful cartoon! ✨"
+              : "Your memory is being transformed into a beautiful cartoon! ✨"
+            : isBiography
+              ? "A life story beautifully illustrated ✨"
+              : "A moment frozen in time, preserved forever ✨"
           }
         </p>
 
@@ -347,9 +355,9 @@ const Results = () => {
         )}
 
         <div className="mt-16 text-center">
-          <Button size="lg" variant="gradient" onClick={() => navigate("/create")} className="btn-glow">
+          <Button size="lg" variant="gradient" onClick={() => navigate(isBiography ? "/biography" : "/create")} className="btn-glow">
             <Plus className="h-5 w-5 mr-2" />
-            Preserve Another Memory
+            {isBiography ? "Create Another Biography" : "Preserve Another Memory"}
           </Button>
         </div>
       </div>
