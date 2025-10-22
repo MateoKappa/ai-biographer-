@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, MicOff, Loader2, ArrowLeft } from "lucide-react";
+import { Mic, MicOff, Loader2, ArrowLeft, Sparkles } from "lucide-react";
 import { useConversation } from "@11labs/react";
 
 interface ConversationData {
@@ -30,6 +30,7 @@ const BiographyChat = () => {
   const [conversationData, setConversationData] = useState<ConversationData>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [templateStory, setTemplateStory] = useState<any>(null);
   
   const conversation = useConversation({
     onConnect: () => {
@@ -82,6 +83,19 @@ const BiographyChat = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
+        return;
+      }
+      
+      // Load most recent completed story as template
+      const { data: stories } = await supabase
+        .from('stories')
+        .select('*')
+        .eq('status', 'complete')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (stories && stories.length > 0) {
+        setTemplateStory(stories[0]);
       }
     };
     checkAuth();
@@ -160,6 +174,48 @@ const BiographyChat = () => {
     }
   };
 
+  const useTemplate = async () => {
+    if (!templateStory) return;
+    
+    setIsGenerating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { data: newStory, error } = await supabase
+        .from('stories')
+        .insert([{
+          user_id: session.user.id,
+          story_text: templateStory.story_text,
+          status: 'draft',
+          context_qa: templateStory.context_qa,
+          temperature: 0.7,
+          desired_panels: 3
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!newStory) throw new Error("Failed to create story");
+
+      toast({
+        title: "Template Loaded!",
+        description: "Using your previous biography as template",
+      });
+
+      navigate(`/biography-settings/${newStory.id}`);
+    } catch (error: any) {
+      console.error("Error using template:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load template",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const { status, isSpeaking } = conversation;
 
   return (
@@ -197,14 +253,43 @@ const BiographyChat = () => {
                   <li>✓ Dreams and aspirations for the future</li>
                 </ul>
               </div>
-              <Button 
-                size="lg" 
-                onClick={startConversation}
-                className="btn-glow"
-              >
-                <Mic className="mr-2 h-5 w-5" />
-                Start Biography Interview
-              </Button>
+              
+              <div className="flex flex-col gap-4 items-center">
+                <Button 
+                  size="lg" 
+                  onClick={startConversation}
+                  className="btn-glow"
+                >
+                  <Mic className="mr-2 h-5 w-5" />
+                  Start Biography Interview
+                </Button>
+                
+                {templateStory && (
+                  <div className="pt-4 border-t w-full max-w-md">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Or skip the interview and use your previous biography:
+                    </p>
+                    <Button 
+                      variant="outline"
+                      onClick={useTemplate}
+                      disabled={isGenerating}
+                      className="w-full"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading Template...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Use Previous Biography as Template
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <>
