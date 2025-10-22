@@ -74,11 +74,8 @@ const Index = () => {
         <div className="flex gap-2">
           {user ? (
             <>
-              <Button variant="outline" onClick={() => navigate("/memory-book")}>
-                My Memories
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/create")}>
-                Preserve Memory
+              <Button variant="outline" onClick={() => navigate("/studio")}>
+                Studio
               </Button>
               <Button variant="ghost" onClick={handleSignOut}>
                 Sign Out
@@ -205,74 +202,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* My Biographies Section - Only show if logged in */}
-      {user && (
-        <section className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-4xl font-bold text-center mb-4 gradient-text">My Biographies</h2>
-            <p className="text-center text-muted-foreground mb-12 text-lg">
-              Your preserved life stories
-            </p>
-            {loadingBiographies ? (
-              <div className="text-center py-12">
-                <Sparkles className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-                <p className="text-muted-foreground">Loading your biographies...</p>
-              </div>
-            ) : biographies.length === 0 ? (
-              <Card className="card-glass p-12 text-center">
-                <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-2xl font-bold mb-2">No biographies yet</h3>
-                <p className="text-muted-foreground mb-6">
-                  Start your first biography by sharing your life story with our AI interviewer
-                </p>
-                <Button
-                  size="lg"
-                  variant="gradient"
-                  onClick={() => navigate("/biography")}
-                  className="btn-glow"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Create Your First Biography
-                </Button>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {biographies.map((bio) => (
-                  <Card
-                    key={bio.id}
-                    className="card-clean hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-                    onClick={() => {
-                      if (bio.status === 'draft') {
-                        navigate(`/biography-settings/${bio.id}`);
-                      } else {
-                        navigate(`/results/${bio.id}`);
-                      }
-                    }}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <BookOpen className="h-8 w-8 text-primary" />
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          bio.status === 'complete' ? 'bg-green-500/20 text-green-700' :
-                          bio.status === 'processing' ? 'bg-yellow-500/20 text-yellow-700' :
-                          'bg-blue-500/20 text-blue-700'
-                        }`}>
-                          {bio.status}
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-lg mb-2">Biography</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(bio.created_at).toLocaleDateString()}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
 
       {/* CTA Section */}
       <section className="py-24 px-4 relative overflow-hidden">
