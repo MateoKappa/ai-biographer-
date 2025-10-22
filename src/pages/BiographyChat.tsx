@@ -223,11 +223,11 @@ const BiographyChat = () => {
       <div className="max-w-4xl mx-auto">
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/studio")}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
+          Back
         </Button>
 
         <Card className="p-8 card-glass">
