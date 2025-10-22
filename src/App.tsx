@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StoryInput from "./pages/StoryInput";
-import StoryQuestions from "./pages/StoryQuestions";
+
 import Results from "./pages/Results";
 import Templates from "./pages/Templates";
 import Session from "./pages/Session";
@@ -25,7 +25,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/create" element={<StoryInput />} />
-          <Route path="/story-questions/:storyId" element={<StoryQuestions />} />
           <Route path="/results/:storyId" element={<Results />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/session/:templateId" element={<Session />} />

@@ -126,14 +126,14 @@ const StoryInput = () => {
         photoUrl = publicUrl;
       }
 
-      // Create story record with status 'pending'
+      // Create story record with status 'processing'
       const { data: storyData, error: storyError } = await supabase
         .from("stories")
         .insert({
           user_id: user.id,
           story_text: story,
           photo_url: photoUrl,
-          status: "pending",
+          status: "processing",
           memory_ids: selectedMemoryIds,
         })
         .select()
@@ -142,12 +142,30 @@ const StoryInput = () => {
       if (storyError) throw storyError;
 
       toast({
-        title: "Story created!",
-        description: "Let's add some more details...",
+        title: "Creating your memory cartoon!",
+        description: "This will take a moment...",
       });
 
-      // Navigate to questions page
-      navigate(`/story-questions/${storyData.id}`);
+      // Generate cartoon immediately
+      const { error: generateError } = await supabase.functions.invoke(
+        "generate-cartoon",
+        {
+          body: { storyId: storyData.id },
+        }
+      );
+
+      if (generateError) {
+        console.error("Generate error:", generateError);
+        toast({
+          title: "Error",
+          description: "Failed to generate cartoon. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Navigate to results page
+      navigate(`/results/${storyData.id}`);
     } catch (error: any) {
       console.error("Generation error:", error);
       toast({
