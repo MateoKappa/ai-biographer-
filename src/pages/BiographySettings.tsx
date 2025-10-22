@@ -14,7 +14,7 @@ const BiographySettings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [desiredPanels, setDesiredPanels] = useState(3);
+  const [desiredPanels, setDesiredPanels] = useState(4);
   const [animationStyle, setAnimationStyle] = useState('classic_cartoon');
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const BiographySettings = () => {
 
       if (storyError) throw storyError;
 
-      setDesiredPanels(story.desired_panels || 3);
+      setDesiredPanels(story.desired_panels || 4);
       setAnimationStyle(story.animation_style || 'classic_cartoon');
     } catch (error: any) {
       console.error("Error loading data:", error);

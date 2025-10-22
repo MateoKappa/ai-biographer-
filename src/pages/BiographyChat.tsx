@@ -9,6 +9,7 @@ import { useConversation } from "@11labs/react";
 
 interface ConversationData {
   name?: string;
+  gender?: string;
   age?: string;
   location?: string;
   childhood?: string;
@@ -148,7 +149,7 @@ const BiographyChat = () => {
           status: 'draft',
           context_qa: conversationData as any,
           temperature: 0.7,
-          desired_panels: 3
+          desired_panels: 4
         }])
         .select()
         .single();
@@ -226,6 +227,7 @@ const BiographyChat = () => {
     // Demo conversation with Anton Osika's story
     const demoData = {
       name: "Anton Osika",
+      gender: "Male",
       age: "Early 30s",
       location: "Stockholm, Sweden",
       childhood: "I grew up in Sweden with a natural curiosity for technology and innovation. From an early age, I was fascinated by how software could transform ideas into reality. This curiosity would later define my entire career path.",
@@ -238,8 +240,9 @@ const BiographyChat = () => {
 
     const conversationFlow = [
       { question: "Hello! I'm your AI biographer. Let's start with your name. What's your name?", field: 'name' },
-      { question: "Great to meet you! How old are you?", field: 'age' },
-      { question: "And where are you from?", field: 'location' },
+      { question: "Great to meet you! What is your gender?", field: 'gender' },
+      { question: "And how old are you?", field: 'age' },
+      { question: "Where are you from?", field: 'location' },
       { question: "Let's talk about your childhood. Can you tell me about your early years?", field: 'childhood' },
       { question: "What about your career? Tell me about your professional journey.", field: 'career' },
       { question: "Family is important. Can you tell me about your family?", field: 'family' },
@@ -292,7 +295,7 @@ const BiographyChat = () => {
           status: 'draft',
           context_qa: conversationData as any,
           temperature: 0.7,
-          desired_panels: 3
+          desired_panels: 4
         }])
         .select()
         .single();

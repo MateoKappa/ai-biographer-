@@ -60,8 +60,9 @@ serve(async (req) => {
 
 First, ask these questions in order:
 1. What is your name?
-2. How old are you?
-3. Where are you from?
+2. What is your gender?
+3. How old are you?
+4. Where are you from?
 
 After getting these basics, engage in a natural conversation to gather their life story. Ask thoughtful follow-up questions about:
 - Important life events and milestones

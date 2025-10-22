@@ -36,7 +36,7 @@ serve(async (req) => {
     console.log("Story fetched:", story.story_text.substring(0, 100));
     
     // Get configuration from story
-    const NUM_PANELS = story.desired_panels || 3;
+    const NUM_PANELS = story.desired_panels || 4;
     const ANIMATION_STYLE = story.animation_style || 'classic_cartoon';
     
     // Define style descriptions
