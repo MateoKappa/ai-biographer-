@@ -273,20 +273,23 @@ const BiographyChat = () => {
   };
 
   const proceedWithTemplate = async () => {
-    if (!templateStory) return;
-    
     setIsGenerating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
+      // Generate conversation text from messages
+      const conversationText = messages
+        .map(m => `${m.role === 'user' ? 'You' : 'Interviewer'}: ${m.content}`)
+        .join('\n\n');
+
       const { data: newStory, error } = await supabase
         .from('stories')
         .insert([{
           user_id: session.user.id,
-          story_text: templateStory.story_text,
+          story_text: conversationText,
           status: 'draft',
-          context_qa: templateStory.context_qa,
+          context_qa: conversationData as any,
           temperature: 0.7,
           desired_panels: 3
         }])
@@ -297,16 +300,16 @@ const BiographyChat = () => {
       if (!newStory) throw new Error("Failed to create story");
 
       toast({
-        title: "Template Loaded!",
-        description: "Using your previous biography as template",
+        title: templateStory ? "Template Loaded!" : "Demo Biography Created!",
+        description: templateStory ? "Using your previous biography as template" : "Continue to customize your biography",
       });
 
       navigate(`/biography-settings/${newStory.id}`);
     } catch (error: any) {
-      console.error("Error using template:", error);
+      console.error("Error proceeding:", error);
       toast({
         title: "Error",
-        description: "Failed to load template",
+        description: "Failed to create biography",
         variant: "destructive",
       });
     } finally {
