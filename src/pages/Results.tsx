@@ -328,7 +328,7 @@ const Results = () => {
                 <img
                   src={panel.image_url}
                   alt={panel.scene_text}
-                  className="w-full h-auto"
+                  className="w-full h-auto max-w-[650px] max-h-[650px] mx-auto"
                   loading="lazy"
                 />
                 <div className="p-8 bg-gradient-to-b from-card to-muted/20">
