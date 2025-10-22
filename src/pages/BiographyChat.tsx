@@ -38,16 +38,22 @@ const BiographyChat = () => {
 
   const startConversation = async () => {
     try {
+      console.log("Starting conversation...");
+      
       // Request microphone permission first
+      console.log("Requesting microphone permission...");
       await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("Microphone permission granted");
       
       // Initialize audio context and queue
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       audioQueueRef.current = new AudioQueue(audioContextRef.current);
+      console.log("Audio context initialized");
 
       // Connect to WebSocket
       const projectRef = "wczgqokhrlzbvhjpgebo";
       const wsUrl = `wss://${projectRef}.supabase.co/functions/v1/biography-chat`;
+      console.log("Connecting to WebSocket:", wsUrl);
       
       wsRef.current = new WebSocket(wsUrl);
 
@@ -99,9 +105,10 @@ const BiographyChat = () => {
 
       wsRef.current.onerror = (error) => {
         console.error("WebSocket error:", error);
+        setIsConnected(false);
         toast({
           title: "Connection Error",
-          description: "Failed to connect to the interview service",
+          description: "Failed to connect to the interview service. Please check your connection.",
           variant: "destructive",
         });
       };
