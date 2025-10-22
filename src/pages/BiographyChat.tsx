@@ -45,9 +45,9 @@ const BiographyChat = () => {
     onMessage: (message) => {
       console.log("Message received:", message);
       
-      if (message.type === 'user_transcript') {
+      if (message.source === 'user') {
         setMessages(prev => [...prev, { role: 'user', content: message.message }]);
-      } else if (message.type === 'agent_response') {
+      } else if (message.source === 'ai') {
         setMessages(prev => {
           const lastMsg = prev[prev.length - 1];
           if (lastMsg?.role === 'assistant') {
