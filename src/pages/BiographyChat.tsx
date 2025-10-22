@@ -125,23 +125,36 @@ const BiographyChat = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const { error } = await supabase
+      const { data: newStory, error } = await supabase
         .from('stories')
         .insert([{
           user_id: session.user.id,
           story_text: conversationText,
           status: 'pending',
           context_qa: conversationData as any
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+      if (!newStory) throw new Error("Failed to create story");
 
       toast({
         title: "Biography Saved",
         description: "Your life story is being created...",
       });
 
-      navigate('/');
+      // Trigger cartoon generation in the background
+      supabase.functions.invoke('generate-cartoon', {
+        body: { storyId: newStory.id, advancedMode: false }
+      }).then(({ error: genError }) => {
+        if (genError) {
+          console.error("Error generating cartoon:", genError);
+        }
+      });
+
+      // Navigate to results page
+      navigate(`/results/${newStory.id}`);
     } catch (error: any) {
       console.error("Error saving:", error);
       toast({
