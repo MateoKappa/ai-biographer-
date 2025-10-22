@@ -6,12 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, ImagePlus, Mic, FileText, Settings2, X } from "lucide-react";
+import { Loader2, Sparkles, ImagePlus, Settings2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import VoiceInterface from "@/components/VoiceInterface";
 
 interface PanelData {
   description: string;
@@ -262,21 +260,8 @@ const StoryInput = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Tabs defaultValue="text" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="text">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Write Story
-                </TabsTrigger>
-                <TabsTrigger value="voice">
-                  <Mic className="w-4 h-4 mr-2" />
-                  Voice Chat
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="text" className="space-y-6 mt-6">
-                {/* Advanced Mode Toggle */}
-                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+            {/* Advanced Mode Toggle */}
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Settings2 className="h-5 w-5" />
                     <div>
@@ -410,12 +395,6 @@ const StoryInput = () => {
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {loading ? "Preserving Your Memory..." : "Create Memory Cartoon"}
                 </Button>
-              </TabsContent>
-
-              <TabsContent value="voice" className="mt-6">
-                <VoiceInterface />
-              </TabsContent>
-            </Tabs>
           </CardContent>
         </Card>
       </div>
