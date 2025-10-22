@@ -280,6 +280,7 @@ const BiographyChat = () => {
 
       // Generate conversation text from messages
       const conversationText = messages
+        .filter(m => m)
         .map(m => `${m.role === 'user' ? 'You' : 'Interviewer'}: ${m.content}`)
         .join('\n\n');
 
