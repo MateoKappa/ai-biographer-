@@ -131,14 +131,13 @@ serve(async (req) => {
           console.log(`   Reference Image: ${panelData.referenceImageUrl}`);
         }
 
-        const imagePrompt = `Create a vibrant cartoon illustration based on this description: "${panelData.description}".
+        const imagePrompt = `Create a vibrant cartoon illustration for ONE scene: "${panelData.description}".
 
-IMPORTANT: Create a MULTI-PANEL COMIC LAYOUT showing ${NUM_PANELS} connected moments of this scene arranged in a grid (like a comic book page). Each panel should show a different moment or angle of the story, all within ONE image.
+IMPORTANT: Create a SINGLE illustration focused on this ONE moment. This is part of a larger story sequence.
 
 Style: ${stylePrompt}
-Layout: Comic book page with ${NUM_PANELS} panels arranged in a grid, with clear borders between panels
-Character consistency: Keep the SAME character(s) throughout ALL panels - maintain consistent appearance, age, clothing, and features
-Composition: Dynamic comic book layout, cinematic angles, emotionally engaging, suitable for all ages`;
+Character consistency: Maintain consistent character appearance (age, clothing, features) throughout the story
+Composition: Cinematic angle, emotionally engaging, suitable for all ages, clear focal point`;
 
         const imageResponse = await fetch(
           "https://api.openai.com/v1/images/generations",
@@ -438,12 +437,11 @@ Composition: Dynamic comic book layout, cinematic angles, emotionally engaging, 
 
       const imagePrompt = `Create a vibrant cartoon illustration that visualizes this story moment: "${storyText}".
 
-IMPORTANT: Create a MULTI-PANEL COMIC LAYOUT showing ${NUM_PANELS} connected sequential moments arranged in a grid (like a comic book page). Show the progression of this story across multiple panels within ONE image.
+IMPORTANT: Create a SINGLE illustration focused on this ONE moment. This is panel ${order_index + 1} of ${NUM_PANELS} in a larger story sequence.
 
 Style: ${stylePrompt}
-Layout: Comic book page with ${NUM_PANELS} panels in a grid, with clear panel borders
-Character consistency: Keep the SAME character(s) throughout ALL panels - maintain consistent appearance, age, clothing, and features across all panels
-Composition: Dynamic sequential storytelling, varied angles, emotionally engaging, family-friendly`;
+Character consistency: Maintain consistent character appearance (age, clothing, features) throughout the story
+Composition: Cinematic angle, emotionally engaging, suitable for all ages, clear focal point`;
 
       const imageResponse = await fetch(
         "https://api.openai.com/v1/images/generations",

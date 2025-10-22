@@ -131,18 +131,19 @@ const Studio = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
-      <header className="p-4 md:p-6 flex justify-between items-center border-b">
-        <div className="flex items-center gap-4">
+      <header className="p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b">
+        <div className="flex items-center gap-2 md:gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-3xl font-bold gradient-text">Management Studio</h1>
+          <h1 className="text-2xl md:text-3xl font-bold gradient-text">Management Studio</h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
           <CreditBalance />
-          <Button variant="gradient" onClick={() => navigate("/biography")} className="btn-glow">
-            <Sparkles className="mr-2 h-5 w-5" />
-            New Biography
+          <Button variant="gradient" onClick={() => navigate("/biography")} className="btn-glow flex-1 sm:flex-initial">
+            <Sparkles className="mr-2 h-4 md:h-5 w-4 md:w-5" />
+            <span className="hidden sm:inline">New Biography</span>
+            <span className="sm:hidden">New</span>
           </Button>
         </div>
       </header>
@@ -225,29 +226,33 @@ const Studio = () => {
 
           {/* Memories Tab */}
           <TabsContent value="memories" className="mt-8">
-            <div className="mb-6 flex justify-between items-center">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold mb-2">Your Memories</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl md:text-2xl font-bold mb-2">Your Memories</h2>
+          <p className="text-sm md:text-base text-muted-foreground">
             Individual memory snapshots you can use in biographies
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate("/gallery")}>
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <Button variant="outline" onClick={() => navigate("/gallery")} className="flex-1 md:flex-initial">
             <Sparkles className="mr-2 h-4 w-4" />
-            View Gallery
+            <span className="hidden sm:inline">View Gallery</span>
+            <span className="sm:hidden">Gallery</span>
           </Button>
-          <Button variant="outline" onClick={() => navigate("/create")}>
+          <Button variant="outline" onClick={() => navigate("/create")} className="flex-1 md:flex-initial">
             <FileText className="mr-2 h-4 w-4" />
-            New Memory
+            <span className="hidden sm:inline">New Memory</span>
+            <span className="sm:hidden">New</span>
           </Button>
           {memories.length > 0 && (
             <Button
               variant="destructive"
               onClick={() => setDeleteAllDialogOpen(true)}
+              className="flex-1 md:flex-initial"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete All
+              <span className="hidden sm:inline">Delete All</span>
+              <span className="sm:hidden">Delete</span>
             </Button>
           )}
         </div>

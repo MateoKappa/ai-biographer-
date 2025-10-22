@@ -104,9 +104,9 @@ const Gallery = () => {
       </header>
 
       <div className="max-w-7xl mx-auto p-4 md:p-8">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold mb-3 gradient-text">Memory Gallery</h1>
-          <p className="text-muted-foreground text-lg">
+        <div className="text-center mb-8 md:mb-12">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-2 md:mb-3 gradient-text">Memory Gallery</h1>
+          <p className="text-muted-foreground text-base md:text-lg">
             Your collection of preserved memories and stories
           </p>
         </div>

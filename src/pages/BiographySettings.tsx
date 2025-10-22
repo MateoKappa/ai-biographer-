@@ -109,32 +109,32 @@ const BiographySettings = () => {
         <Button 
           variant="ghost" 
           onClick={() => navigate("/")}
-          className="mb-6"
+          className="mb-4 md:mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
 
-        <Card className="p-8 card-glass">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-3 gradient-text">
+        <Card className="p-4 md:p-8 card-glass">
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-3 gradient-text">
               Configure Your Biography
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-base md:text-lg">
               Customize how your life story will be created
             </p>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {/* Animation Style */}
             <div>
-              <Label className="text-lg font-semibold mb-4 block">
+              <Label className="text-base md:text-lg font-semibold mb-3 md:mb-4 block">
                 Animation Style
               </Label>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                 Choose the visual style for your biography
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                 {[
                   { value: 'classic_cartoon', label: 'Classic Cartoon', emoji: '🎨' },
                   { value: 'anime', label: 'Anime', emoji: '⭐' },
@@ -146,14 +146,14 @@ const BiographySettings = () => {
                   <button
                     key={style.value}
                     onClick={() => setAnimationStyle(style.value)}
-                    className={`p-4 rounded-lg border-2 transition-all text-center hover:scale-105 ${
+                    className={`p-3 md:p-4 rounded-lg border-2 transition-all text-center hover:scale-105 ${
                       animationStyle === style.value
                         ? 'border-primary bg-primary/10'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <div className="text-3xl mb-2">{style.emoji}</div>
-                    <div className="text-sm font-medium">{style.label}</div>
+                    <div className="text-2xl md:text-3xl mb-1 md:mb-2">{style.emoji}</div>
+                    <div className="text-xs md:text-sm font-medium">{style.label}</div>
                   </button>
                 ))}
               </div>
@@ -161,10 +161,10 @@ const BiographySettings = () => {
 
             {/* Panels Setting */}
             <div>
-              <Label className="text-lg font-semibold mb-4 block">
+              <Label className="text-base md:text-lg font-semibold mb-3 md:mb-4 block">
                 Number of Panels
               </Label>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                 Choose how many cartoon panels to generate (1-8)
               </p>
               <div className="flex items-center gap-4">

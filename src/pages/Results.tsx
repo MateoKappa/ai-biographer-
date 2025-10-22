@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Download, Share2, Plus } from "lucide-react";
+import { Loader2, Download, Share2, Plus, ArrowLeft } from "lucide-react";
 import jsPDF from "jspdf";
 import { ShareModal } from "@/components/ShareModal";
 
@@ -252,27 +252,29 @@ const Results = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       {/* Header */}
-      <header className="p-4 md:p-6 flex justify-between items-center border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <Button variant="ghost" onClick={() => navigate("/")} className="hover:bg-primary/10">
-          ← Back to Home
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Back to Home</span>
+          <span className="sm:inline md:hidden">Back</span>
         </Button>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleDownload} className="hover:shadow-lg">
-            <Download className="h-4 w-4 mr-2" />
-            Download
+        <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
+          <Button variant="outline" onClick={handleDownload} className="hover:shadow-lg flex-1 sm:flex-initial">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Download</span>
           </Button>
-          <Button variant="gradient" onClick={handleShare} className="btn-glow">
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
+          <Button variant="gradient" onClick={handleShare} className="btn-glow flex-1 sm:flex-initial">
+            <Share2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Share</span>
           </Button>
         </div>
       </header>
       
       <div className="max-w-5xl mx-auto p-4 md:p-8">
-        <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">
+        <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-2 md:mb-3 gradient-text">
           {isBiography ? "Your Life Story" : "Your Preserved Memory"}
         </h1>
-        <p className="text-center text-muted-foreground mb-16 text-lg">
+        <p className="text-center text-muted-foreground mb-8 md:mb-16 text-base md:text-lg">
           {status === "processing" 
             ? isBiography 
               ? "Your biography is being transformed into a beautiful cartoon! ✨"
