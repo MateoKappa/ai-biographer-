@@ -8,9 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, ImagePlus, Mic, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VoiceInterface from "@/components/VoiceInterface";
 
@@ -19,8 +16,6 @@ const StoryInput = () => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [memories, setMemories] = useState<any[]>([]);
-  const [selectedMemoryIds, setSelectedMemoryIds] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const maxWords = 300;
@@ -33,17 +28,6 @@ const StoryInput = () => {
         return;
       }
       setUser(session.user);
-      
-      // Fetch user's memories
-      const { data: memoriesData } = await supabase
-        .from("memory_captures")
-        .select("*, template_questions(question_text), memory_templates(name)")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
-      
-      if (memoriesData) {
-        setMemories(memoriesData);
-      }
     };
 
     checkAuth();
@@ -66,14 +50,6 @@ const StoryInput = () => {
     if (e.target.files && e.target.files[0]) {
       setPhoto(e.target.files[0]);
     }
-  };
-
-  const toggleMemory = (memoryId: string) => {
-    setSelectedMemoryIds((prev) =>
-      prev.includes(memoryId)
-        ? prev.filter((id) => id !== memoryId)
-        : [...prev, memoryId]
-    );
   };
 
   const handleGenerate = async () => {
@@ -134,7 +110,6 @@ const StoryInput = () => {
           story_text: story,
           photo_url: photoUrl,
           status: "processing",
-          memory_ids: selectedMemoryIds,
         })
         .select()
         .single();
@@ -244,58 +219,6 @@ const StoryInput = () => {
                       Selected: {photo.name}
                     </p>
                   )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Include Memories (Optional)</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                        type="button"
-                      >
-                        {selectedMemoryIds.length > 0
-                          ? `${selectedMemoryIds.length} memories selected`
-                          : "Select memories to include"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <ScrollArea className="h-72">
-                        {memories.length === 0 ? (
-                          <div className="p-4 text-sm text-muted-foreground">
-                            No memories yet. Create some in Memory Templates!
-                          </div>
-                        ) : (
-                          <div className="p-4 space-y-3">
-                            {memories.map((memory: any) => (
-                              <div
-                                key={memory.id}
-                                className="flex items-start gap-3 p-2 rounded hover:bg-muted/50 cursor-pointer"
-                                onClick={() => toggleMemory(memory.id)}
-                              >
-                                <Checkbox
-                                  checked={selectedMemoryIds.includes(memory.id)}
-                                  onCheckedChange={() => toggleMemory(memory.id)}
-                                />
-                                <div className="flex-1 space-y-1">
-                                  <p className="text-sm font-medium">
-                                    {memory.template_questions?.question_text}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">
-                                    {memory.answer_text}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {memory.memory_templates?.name}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </ScrollArea>
-                    </PopoverContent>
-                  </Popover>
                 </div>
 
                 <Button

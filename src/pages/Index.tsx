@@ -42,9 +42,6 @@ const Index = () => {
               <Button variant="outline" onClick={() => navigate("/memory-book")}>
                 My Memories
               </Button>
-              <Button variant="outline" onClick={() => navigate("/templates")}>
-                Memory Templates
-              </Button>
               <Button variant="outline" onClick={() => navigate("/create")}>
                 Preserve Memory
               </Button>
