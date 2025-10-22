@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.filter-conversation]
 verify_jwt = true
+
+[functions.biography-chat]
+verify_jwt = false

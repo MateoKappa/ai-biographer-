@@ -71,11 +71,11 @@ const Index = () => {
           <Button
             size="lg"
             variant="gradient"
-            onClick={() => navigate(user ? "/create" : "/auth")}
+            onClick={() => navigate(user ? "/biography" : "/auth")}
             className="text-lg animate-slide-up btn-glow"
           >
             <Sparkles className="mr-2 h-5 w-5" />
-            {user ? "Start Your Story" : "Get Started"}
+            {user ? "Start Your Biography" : "Get Started"}
           </Button>
         </div>
       </section>
@@ -181,11 +181,11 @@ const Index = () => {
           <Button
             size="lg"
             variant="gradient"
-            onClick={() => navigate(user ? "/create" : "/auth")}
+            onClick={() => navigate(user ? "/biography" : "/auth")}
             className="text-lg btn-glow"
           >
             <Sparkles className="mr-2 h-5 w-5" />
-            Preserve Your First Memory
+            Start Your Biography
           </Button>
         </div>
       </section>
