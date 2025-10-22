@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Download, Share2, Plus } from "lucide-react";
+import jsPDF from "jspdf";
 
 interface CartoonPanel {
   id: string;
@@ -123,11 +124,76 @@ const Results = () => {
     setPanels(panelsData || []);
   };
 
-  const handleDownload = () => {
-    toast({
-      title: "Coming soon!",
-      description: "Download feature will be available soon.",
-    });
+  const handleDownload = async () => {
+    if (panels.length === 0) {
+      toast({
+        title: "No panels to download",
+        description: "Please wait for the cartoon to be generated.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Generating PDF...",
+        description: "This may take a moment.",
+      });
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - (margin * 2);
+
+      for (let i = 0; i < panels.length; i++) {
+        const panel = panels[i];
+
+        if (i > 0) {
+          pdf.addPage();
+        }
+
+        // Add image
+        try {
+          const imgData = panel.image_url;
+          const imgWidth = contentWidth;
+          const imgHeight = contentWidth; // Square aspect ratio (1024x1024)
+          
+          pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
+          
+          // Add scene text below image
+          const textY = margin + imgHeight + 10;
+          pdf.setFontSize(12);
+          pdf.setFont("helvetica", "italic");
+          
+          const splitText = pdf.splitTextToSize(panel.scene_text, contentWidth);
+          pdf.text(splitText, margin, textY);
+        } catch (err) {
+          console.error("Error adding panel to PDF:", err);
+        }
+      }
+
+      // Save the PDF
+      const filename = `memory-cartoon-${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(filename);
+
+      toast({
+        title: "Download complete!",
+        description: "Your cartoon has been saved as a PDF.",
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Download failed",
+        description: "There was an error generating the PDF.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = () => {
