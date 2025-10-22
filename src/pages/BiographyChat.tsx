@@ -492,7 +492,7 @@ const BiographyChat = () => {
                     </div>
                   </div>
                 )}
-                {messages.map((msg, idx) => (
+                {messages.filter(msg => msg).map((msg, idx) => (
                   <div
                     key={idx}
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
