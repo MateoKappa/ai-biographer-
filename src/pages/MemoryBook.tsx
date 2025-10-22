@@ -97,33 +97,12 @@ const MemoryBook = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // First, get all story IDs for this user
-      const { data: userStories, error: fetchError } = await supabase
-        .from("stories")
-        .select("id")
-        .eq("user_id", session.user.id);
+      // Call the database function to handle cascade deletion server-side
+      const { error } = await supabase.rpc('delete_all_user_stories', {
+        p_user_id: session.user.id
+      });
 
-      if (fetchError) throw fetchError;
-
-      if (userStories && userStories.length > 0) {
-        const storyIds = userStories.map(s => s.id);
-
-        // Delete all cartoon panels for these stories first
-        const { error: panelsError } = await supabase
-          .from("cartoon_panels")
-          .delete()
-          .in("story_id", storyIds);
-
-        if (panelsError) throw panelsError;
-
-        // Then delete all stories
-        const { error: storiesError } = await supabase
-          .from("stories")
-          .delete()
-          .eq("user_id", session.user.id);
-
-        if (storiesError) throw storiesError;
-      }
+      if (error) throw error;
 
       setStories([]);
       toast({
