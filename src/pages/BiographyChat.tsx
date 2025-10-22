@@ -223,17 +223,17 @@ const BiographyChat = () => {
   const useDemoBiography = async () => {
     setIsUsingTemplate(true);
     
-    // Demo conversation with fake data
+    // Demo conversation with Anton Osika's story
     const demoData = {
-      name: "Alex Johnson",
-      age: "45",
-      location: "San Francisco, California",
-      childhood: "I grew up in a small town in Oregon. My parents ran a local bookstore, which sparked my love for reading and storytelling. I spent countless hours exploring the shelves and imagining different worlds.",
-      career: "I started as a software engineer right out of college, but eventually transitioned into product management. I've been fortunate to work on several innovative tech products that have impacted millions of users. Currently, I'm leading a team at a startup focused on education technology.",
-      family: "I'm married to my college sweetheart, and we have two wonderful children - a 12-year-old daughter who loves art, and a 9-year-old son who's obsessed with robotics. Family game nights are our favorite tradition.",
-      challenges: "The biggest challenge was when our startup nearly failed during the 2020 pandemic. We had to pivot our entire business model and let go of half the team. It was heartbreaking but taught me resilience and the importance of adaptability.",
-      proudest_moments: "Launching our education app that's now used by over 500,000 students worldwide. Knowing that we're making a real difference in children's learning experiences keeps me motivated every day.",
-      dreams: "I dream of writing a book about the intersection of technology and education. I also hope to start a foundation that provides coding education to underprivileged communities."
+      name: "Anton Osika",
+      age: "Early 30s",
+      location: "Stockholm, Sweden",
+      childhood: "I grew up in Sweden with a natural curiosity for technology and innovation. From an early age, I was fascinated by how software could transform ideas into reality. This curiosity would later define my entire career path.",
+      career: "My entrepreneurial journey began in 2019 when I co-founded Depict.ai, an AI-powered e-commerce product discovery company, where I served as CTO. We raised $20 million and built something meaningful. But in spring 2023, after ChatGPT launched, I had a vision during a flight with my now-wife. I spent three weekends building what became GPT Engineer, which evolved into Lovable. In just eight months, we achieved unicorn status with a $1.8 billion valuation and crossed $100 million in ARR faster than any software company in history - including OpenAI, Cursor, and Wiz.",
+      family: "I'm married to my wonderful wife who supported me through the intense early days of Lovable. She was with me on that transformative trip when I first conceived the idea for GPT Engineer. Work-life balance is important, but I believe in going all-in when you're onto something special.",
+      challenges: "The biggest challenge was at Depict when we said yes to too many things and lost focus. We didn't take the one thing we could do 10 times better than anyone else. That taught me the power of saying no. With Lovable, I also passed on Y Combinator despite having experience with them before - at best it would be acceleration with dilution, at worst a distraction. Making bold decisions and staying focused has been crucial.",
+      proudest_moments: "Building Lovable into a unicorn in just 8 months and achieving the fastest $100M ARR in software history. But what really drives me is our mission - building 'the last piece of software that anyone has to write.' We're democratizing software development through AI, making it possible for anyone to build with natural language. The open-source community response to GPT Engineer, which eventually became Lovable, validated that vision.",
+      dreams: "My dream is to make software development accessible to everyone on Earth. I want Lovable to be the platform that empowers millions to turn their ideas into reality without needing to learn complex coding. I believe the future belongs to those who combine ambition with raw talent, and I want to enable that globally. Europe has incredible talent, and I want to prove that you can build world-changing companies from here by combining European talent with American-style ambition."
     };
 
     const conversationFlow = [
