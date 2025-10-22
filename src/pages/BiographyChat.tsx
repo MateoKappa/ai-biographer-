@@ -93,7 +93,7 @@ const BiographyChat = () => {
       
       // Get signed URL from our edge function
       const { data, error } = await supabase.functions.invoke('get-elevenlabs-signed-url', {
-        body: { agentId: 'your-agent-id' } // You'll need to create an agent in ElevenLabs dashboard
+        body: { agentId: 'agent_7101k86b0qb0eftb3sqg79xcmntw' }
       });
 
       if (error) throw error;
