@@ -142,11 +142,11 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                `You are a creative story analyzer. Split the story into ${NUM_PANELS} key scenes that would make great cartoon panels. Each scene should be a vivid visual description maintaining the same character throughout. Focus on visual details like setting, actions, and emotions. Return ONLY a JSON array of scene descriptions, nothing else. Format: [\"scene 1 description\", \"scene 2 description\", ...]`,
+                `You are a story narrative expert. Break this story into ${NUM_PANELS} connected moments that flow together as one cohesive narrative. Each panel description should be SHORT (2-3 sentences max) and focus on WHAT HAPPENS in the story, not visual details. The panels should connect like chapters: beginning → middle → end. Write what's happening in the story at each moment, maintaining narrative flow. Return ONLY a JSON array of SHORT story moments. Format: ["What happens first...", "Then what happens...", "Finally..."]`,
             },
             {
               role: "user",
-              content: `Create ${NUM_PANELS} cartoon scenes based on this story:\n\n${processedStory}`,
+              content: `Break this memory into ${NUM_PANELS} connected story moments (SHORT descriptions of what happens, NOT visual details):\n\n${processedStory}`,
             },
           ],
         }),
@@ -211,7 +211,11 @@ serve(async (req) => {
       console.log(`🖼️  Panel ${order_index + 1}/${scenes.length}: Starting image generation...`);
       console.log(`   Scene: ${sceneText.substring(0, 100)}${sceneText.length > 100 ? '...' : ''}`);
 
-      const imagePrompt = `Create a colorful cartoon illustration in comic book style depicting this scene: ${sceneText}. IMPORTANT: Keep the same character throughout all panels - maintain consistent appearance, age, and features. Vibrant colors, bold outlines, expressive characters, cinematic composition, suitable for all ages.`;
+      const imagePrompt = `Create a vibrant cartoon illustration that visualizes this story moment: "${sceneText}". 
+
+Style: Colorful comic book style, bold outlines, expressive characters, warm and inviting atmosphere. 
+Character consistency: Keep the SAME character(s) throughout - maintain consistent appearance, age, clothing, and features across all panels.
+Composition: Cinematic, emotionally engaging, suitable for all ages, focus on the action/emotion of this moment in the story.`;
 
       const imageResponse = await fetch(
         "https://api.openai.com/v1/images/generations",
