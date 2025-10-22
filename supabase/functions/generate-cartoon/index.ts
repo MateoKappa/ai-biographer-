@@ -134,10 +134,11 @@ serve(async (req) => {
         const imagePrompt = `Create a vibrant cartoon illustration for ONE scene: "${panelData.description}".
 
 IMPORTANT: Create a SINGLE illustration focused on this ONE moment. This is part of a larger story sequence.
+LAYOUT: Create 4 small cartoon panels arranged in a grid (2x2) within one image. Each small panel should show a different moment or angle of this scene, like a comic book page layout.
 
 Style: ${stylePrompt}
 Character consistency: Maintain consistent character appearance (age, clothing, features) throughout the story
-Composition: Cinematic angle, emotionally engaging, suitable for all ages, clear focal point`;
+Composition: Cinematic angle, emotionally engaging, suitable for all ages, clear focal point in each small panel`;
 
         const imageResponse = await fetch(
           "https://api.openai.com/v1/images/generations",
@@ -438,10 +439,11 @@ Composition: Cinematic angle, emotionally engaging, suitable for all ages, clear
       const imagePrompt = `Create a vibrant cartoon illustration that visualizes this story moment: "${storyText}".
 
 IMPORTANT: Create a SINGLE illustration focused on this ONE moment. This is panel ${order_index + 1} of ${NUM_PANELS} in a larger story sequence.
+LAYOUT: Create 4 small cartoon panels arranged in a grid (2x2) within one image. Each small panel should show a different moment or angle of this scene, like a comic book page layout.
 
 Style: ${stylePrompt}
 Character consistency: Maintain consistent character appearance (age, clothing, features) throughout the story
-Composition: Cinematic angle, emotionally engaging, suitable for all ages, clear focal point`;
+Composition: Cinematic angle, emotionally engaging, suitable for all ages, clear focal point in each small panel`;
 
       const imageResponse = await fetch(
         "https://api.openai.com/v1/images/generations",
