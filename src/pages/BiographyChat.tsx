@@ -31,6 +31,7 @@ const BiographyChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [templateStory, setTemplateStory] = useState<any>(null);
+  const [isUsingTemplate, setIsUsingTemplate] = useState(false);
   
   const conversation = useConversation({
     onConnect: () => {
@@ -177,6 +178,51 @@ const BiographyChat = () => {
   const useTemplate = async () => {
     if (!templateStory) return;
     
+    setIsUsingTemplate(true);
+    
+    // Generate conversation from template
+    const templateMessages: Message[] = [];
+    const qaData = templateStory.context_qa || {};
+    
+    // Create a conversational flow from the template data
+    const conversationFlow = [
+      { question: "Hello! I'm your AI biographer. Let's start with your name. What's your name?", field: 'name' },
+      { question: "Great to meet you! How old are you?", field: 'age' },
+      { question: "And where are you from?", field: 'location' },
+      { question: "Let's talk about your childhood. Can you tell me about your early years?", field: 'childhood' },
+      { question: "What about your career? Tell me about your professional journey.", field: 'career' },
+      { question: "Family is important. Can you tell me about your family?", field: 'family' },
+      { question: "We all face challenges. What challenges have you overcome?", field: 'challenges' },
+      { question: "What are you most proud of in your life?", field: 'proudest_moments' },
+      { question: "Finally, what are your dreams and aspirations?", field: 'dreams' },
+    ];
+
+    // Add messages with delays to simulate conversation
+    for (const item of conversationFlow) {
+      templateMessages.push({ role: 'assistant', content: item.question });
+      if (qaData[item.field]) {
+        templateMessages.push({ role: 'user', content: qaData[item.field] });
+      }
+    }
+
+    // Display messages with animation
+    setMessages([]);
+    let currentIndex = 0;
+    
+    const displayNextMessage = () => {
+      if (currentIndex < templateMessages.length) {
+        setMessages(prev => [...prev, templateMessages[currentIndex]]);
+        currentIndex++;
+        setTimeout(displayNextMessage, 800);
+      }
+    };
+    
+    displayNextMessage();
+  };
+
+  const proceedWithTemplate = async () => {
+    if (!templateStory) return;
+    
     setIsGenerating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -219,137 +265,231 @@ const BiographyChat = () => {
   const { status, isSpeaking } = conversation;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate("/studio")}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="max-w-5xl mx-auto p-4 md:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/studio")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          
+          {(status === "connected" || isUsingTemplate) && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20">
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-sm font-medium text-green-700">
+                {isUsingTemplate ? "Template Mode" : "Live Interview"}
+              </span>
+            </div>
+          )}
+        </div>
 
-        <Card className="p-8 card-glass">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-3 gradient-text">Your Life, Told by AI</h1>
-            <p className="text-muted-foreground text-lg">
-              Have a chat with your AI biographer and get your story beautifully written
+        <Card className="p-6 md:p-10 card-glass shadow-xl">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">AI Biography Interview</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 gradient-text">Your Life, Told by AI</h1>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Have a natural conversation with your AI biographer or use your previous story as a template
             </p>
           </div>
 
-          {status === "disconnected" ? (
+          {status === "disconnected" && !isUsingTemplate ? (
             <div className="text-center py-12">
-              <div className="mb-8">
-                <p className="text-muted-foreground mb-4">
-                  Click the button below to begin your voice interview. Your AI biographer will ask you about:
-                </p>
-                <ul className="text-sm text-muted-foreground space-y-2 max-w-md mx-auto text-left">
-                  <li>✓ Your name, age, and where you're from</li>
-                  <li>✓ Important life events and milestones</li>
-                  <li>✓ Memorable moments and experiences</li>
-                  <li>✓ Family, relationships, and values</li>
-                  <li>✓ Career, achievements, and challenges</li>
-                  <li>✓ Dreams and aspirations for the future</li>
-                </ul>
-              </div>
-              
-              <div className="flex flex-col gap-4 items-center">
-                <Button 
-                  size="lg" 
-                  onClick={startConversation}
-                  className="btn-glow"
-                >
-                  <Mic className="mr-2 h-5 w-5" />
-                  Start Biography Interview
-                </Button>
-                
+              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-10">
+                {/* Live Interview Option */}
+                <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50">
+                  <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <Mic className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">Live Voice Interview</h3>
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                    Have a natural conversation with your AI biographer. Answer questions about your life story in real-time.
+                  </p>
+                  <ul className="text-xs text-muted-foreground space-y-2 mb-6 text-left">
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Personal background & life events
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Career journey & achievements
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Family, relationships & values
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Dreams & aspirations
+                    </li>
+                  </ul>
+                  <Button 
+                    size="lg" 
+                    onClick={startConversation}
+                    className="w-full btn-glow"
+                  >
+                    <Mic className="mr-2 h-5 w-5" />
+                    Start Interview
+                  </Button>
+                </Card>
+
+                {/* Template Option */}
                 {templateStory && (
-                  <div className="pt-4 border-t w-full max-w-md">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Or skip the interview and use your previous biography:
+                  <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-secondary/50">
+                    <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                      <Sparkles className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">Use Previous Biography</h3>
+                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                      Skip the interview and use your previous biography as a starting point. View the conversation and proceed to customization.
                     </p>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/10 mb-6">
+                      <Sparkles className="h-4 w-4 text-secondary" />
+                      <span className="text-xs font-medium text-secondary">Quick & Easy</span>
+                    </div>
                     <Button 
                       variant="outline"
+                      size="lg"
                       onClick={useTemplate}
                       disabled={isGenerating}
-                      className="w-full"
+                      className="w-full border-2"
                     >
                       {isGenerating ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading Template...
+                          Loading...
                         </>
                       ) : (
                         <>
-                          <Sparkles className="mr-2 h-4 w-4" />
-                          Use Previous Biography as Template
+                          <Sparkles className="mr-2 h-5 w-5" />
+                          Use Template
                         </>
                       )}
                     </Button>
-                  </div>
+                  </Card>
                 )}
               </div>
             </div>
           ) : (
             <>
-              <div className="mb-8 h-96 overflow-y-auto space-y-4 p-4 bg-muted/20 rounded-lg">
+              <div className="mb-8 h-[500px] overflow-y-auto space-y-4 p-6 bg-gradient-to-b from-muted/20 to-muted/5 rounded-2xl border-2">
                 {messages.length === 0 && (
                   <div className="flex items-center justify-center h-full">
-                    <p className="text-muted-foreground">Waiting for conversation to begin...</p>
+                    <div className="text-center">
+                      <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+                      <p className="text-muted-foreground">Waiting for conversation to begin...</p>
+                    </div>
                   </div>
                 )}
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                    style={{ animationDelay: `${idx * 0.1}s` }}
                   >
                     <div
-                      className={`max-w-[80%] p-4 rounded-2xl ${
+                      className={`max-w-[85%] p-4 rounded-2xl shadow-sm ${
                         msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-card border'
+                          ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground'
+                          : 'bg-card border-2'
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
+                      <div className="flex items-start gap-3">
+                        {msg.role === 'assistant' && (
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                            <Sparkles className="h-4 w-4 text-white" />
+                          </div>
+                        )}
+                        <p className="text-sm leading-relaxed pt-1">{msg.content}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
-                {isSpeaking && (
+                {isSpeaking && !isUsingTemplate && (
                   <div className="flex justify-start animate-fade-in">
-                    <div className="bg-card border p-4 rounded-2xl flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm text-muted-foreground">AI is speaking...</span>
+                    <div className="bg-card border-2 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <span className="text-sm font-medium text-muted-foreground">AI is speaking...</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-center gap-6">
-                <div className={`p-6 rounded-full transition-all ${
-                  status === 'connected' ? 'bg-green-500/20 ring-4 ring-green-500/20' : 'bg-muted'
-                }`}>
-                  {status === 'connected' ? (
-                    <Mic className="h-8 w-8 text-green-500 animate-pulse" />
-                  ) : (
-                    <MicOff className="h-8 w-8 text-muted-foreground" />
-                  )}
-                </div>
-                <Button 
-                  onClick={endConversation}
-                  variant="secondary"
-                  size="lg"
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating Biography...
-                    </>
-                  ) : (
-                    'End Interview & Create Biography'
-                  )}
-                </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-muted/20 rounded-xl border-2">
+                {!isUsingTemplate ? (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <div className={`p-4 rounded-full transition-all ${
+                        status === 'connected' ? 'bg-green-500/20 ring-4 ring-green-500/20' : 'bg-muted'
+                      }`}>
+                        {status === 'connected' ? (
+                          <Mic className="h-6 w-6 text-green-500 animate-pulse" />
+                        ) : (
+                          <MicOff className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">
+                          {status === 'connected' ? 'Recording...' : 'Not Recording'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {status === 'connected' ? 'Speak naturally' : 'Click start to begin'}
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={endConversation}
+                      variant="secondary"
+                      size="lg"
+                      disabled={isGenerating}
+                      className="shadow-md"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        'End Interview & Continue'
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="p-4 rounded-full bg-secondary/20">
+                        <Sparkles className="h-6 w-6 text-secondary" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">Template Conversation</p>
+                        <p className="text-xs text-muted-foreground">Review and proceed when ready</p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={proceedWithTemplate}
+                      size="lg"
+                      disabled={isGenerating || messages.length === 0}
+                      className="shadow-md btn-glow"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Biography...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Continue to Settings
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
               </div>
             </>
           )}
