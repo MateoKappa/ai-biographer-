@@ -14,13 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { storyId } = await req.json();
+    const { storyId, advancedMode } = await req.json();
     
-    // 🎨 CONFIGURATION: Number of cartoon panels to generate
-    // Change this value to generate more panels (e.g., 2-4)
-    const NUM_PANELS = 3;
-    
-    console.log("Generating cartoon for story:", storyId);
+    console.log("Generating cartoon for story:", storyId, "Advanced mode:", advancedMode);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -44,6 +40,117 @@ serve(async (req) => {
       .from("stories")
       .update({ status: "processing" })
       .eq("id", storyId);
+
+    // Check if this is advanced mode with user-defined panels
+    if (advancedMode && story.context_qa && Array.isArray(story.context_qa) && story.context_qa.length > 0) {
+      console.log("🎯 ADVANCED MODE: Using user-defined panels");
+      const userPanels = story.context_qa;
+      
+      // Generate images directly from user descriptions
+      console.log(`🎨 Generating ${userPanels.length} images from user-defined panels IN PARALLEL...`);
+      
+      const imageGenerationPromises = userPanels.map(async (panelData: any, order_index: number) => {
+        console.log(`🖼️  Panel ${order_index + 1}/${userPanels.length}: Starting image generation...`);
+        console.log(`   Description: ${panelData.description}`);
+        if (panelData.referenceImageUrl) {
+          console.log(`   Reference Image: ${panelData.referenceImageUrl}`);
+        }
+
+        const imagePrompt = `Create a vibrant cartoon illustration based on this description: "${panelData.description}".
+
+Style: Colorful comic book style, bold outlines, expressive characters, warm and inviting atmosphere.
+Character consistency: Keep the SAME character(s) throughout - maintain consistent appearance, age, clothing, and features across all panels.
+Composition: Cinematic, emotionally engaging, suitable for all ages, focus on the moment described.`;
+
+        const imageResponse = await fetch(
+          "https://api.openai.com/v1/images/generations",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${openaiApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-image-1",
+              prompt: imagePrompt,
+              n: 1,
+              size: "1024x1024",
+              quality: "medium",
+              output_format: "png",
+            }),
+          }
+        );
+
+        if (!imageResponse.ok) {
+          const errorText = await imageResponse.text();
+          console.error(`Image generation error for panel ${order_index}:`, errorText);
+          throw new Error(`Failed to generate image for panel ${order_index + 1}: ${errorText}`);
+        }
+
+        const imageData = await imageResponse.json();
+        console.log(`✅ Panel ${order_index + 1}/${userPanels.length}: Image generated successfully`);
+
+        const imageUrl = imageData.data?.[0]?.b64_json 
+          ? `data:image/png;base64,${imageData.data[0].b64_json}`
+          : null;
+
+        if (!imageUrl) {
+          console.error("No image URL in response:", imageData);
+          throw new Error("Failed to get image URL from OpenAI");
+        }
+
+        return { sceneText: panelData.description, imageUrl, order_index };
+      });
+
+      // Wait for all images to be generated
+      console.log("⏳ Waiting for all images to complete...");
+      const generatedImages = await Promise.all(imageGenerationPromises);
+      console.log("✅ All images generated!");
+
+      // Save all panels to database
+      console.log("💾 Saving all panels to database...");
+      for (const { sceneText, imageUrl, order_index } of generatedImages) {
+        const { error: panelError } = await supabase
+          .from("cartoon_panels")
+          .insert({
+            story_id: storyId,
+            scene_text: sceneText,
+            image_url: imageUrl,
+            order_index,
+          });
+
+        if (panelError) {
+          console.error("❌ Panel insert error:", panelError);
+          throw panelError;
+        }
+      }
+      console.log("✅ All panels saved to database");
+
+      // Update story status to complete
+      console.log("🎉 All panels complete! Finalizing...");
+      const { error: updateError } = await supabase
+        .from("stories")
+        .update({ status: "complete" })
+        .eq("id", storyId);
+
+      if (updateError) throw updateError;
+
+      console.log("✨ SUCCESS! Cartoon generation complete!");
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          panels: generatedImages.length,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // SIMPLE MODE: Continue with AI-powered scene generation
+    console.log("📖 SIMPLE MODE: Using AI to generate scenes");
+    const NUM_PANELS = 3;
 
     // Fetch the selected memories if any
     let memoriesText = "";
