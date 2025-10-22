@@ -58,9 +58,13 @@ const BiographySettings = () => {
       setSelectedMemories(story.memory_ids || []);
 
       // Load available memories
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
       const { data: memoriesData, error: memoriesError } = await supabase
         .from("memory_captures")
         .select("*, template_questions(question_text)")
+        .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
       if (memoriesError) throw memoriesError;
