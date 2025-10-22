@@ -184,34 +184,71 @@ serve(async (req) => {
 
     console.log(`✅ Generated ${scenes.length} scenes for the cartoon`);
 
-    // Step 2: Generate cartoon images for all scenes IN PARALLEL for speed
-    console.log(`🎨 STEP 3/3: Generating ${scenes.length} cartoon images IN PARALLEL...`);
-    
-    // Prepare all scene texts first
-    const scenesWithText = scenes.map((sceneData, i) => {
-      let sceneText: string;
-      if (typeof sceneData === 'string') {
-        sceneText = sceneData;
-      } else if (sceneData.scene) {
-        sceneText = sceneData.scene;
-      } else if (sceneData.setting && sceneData.action) {
-        sceneText = `${sceneData.setting} ${sceneData.action}`;
-        if (sceneData.emotion) sceneText += ` ${sceneData.emotion}`;
-      } else {
-        console.error("Unknown scene format:", sceneData);
-        sceneText = JSON.stringify(sceneData);
+    // Step 2.5: Convert detailed scenes into SHORT connected story descriptions
+    console.log(`📝 STEP 2.5/4: Converting scenes into connected story narrative...`);
+    const narrativeResponse = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-5-mini-2025-08-07",
+          messages: [
+            {
+              role: "system",
+              content:
+                `You are a storytelling expert. You will receive ${NUM_PANELS} scene descriptions. Convert them into ${NUM_PANELS} SHORT (1-2 sentences max), CONNECTED story descriptions that flow together like a narrative. Each description should tell WHAT HAPPENS in that moment of the story, not describe visuals. They should read like: "First...", "Then...", "Finally..." - a story you'd tell someone, not a scene you'd paint. Return ONLY a JSON array of ${NUM_PANELS} SHORT story descriptions. Format: ["First moment of story...", "Second moment...", "Final moment..."]`,
+            },
+            {
+              role: "user",
+              content: `Convert these ${NUM_PANELS} detailed scenes into SHORT connected story moments:\n\n${scenes.map((s, i) => `Scene ${i + 1}: ${typeof s === 'string' ? s : JSON.stringify(s)}`).join('\n\n')}`,
+            },
+          ],
+        }),
       }
-      return { sceneText, order_index: i };
+    );
+
+    if (!narrativeResponse.ok) {
+      const errorText = await narrativeResponse.text();
+      console.error("Narrative API error:", errorText);
+      throw new Error(`Failed to create story narrative: ${errorText}`);
+    }
+
+    const narrativeData = await narrativeResponse.json();
+    console.log("Narrative response:", narrativeData);
+
+    let storyDescriptions: string[];
+    try {
+      const content = narrativeData.choices[0].message.content;
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        storyDescriptions = JSON.parse(jsonMatch[0]);
+      } else {
+        storyDescriptions = JSON.parse(content);
+      }
+    } catch (parseError) {
+      console.error("Failed to parse narrative:", parseError);
+      // Fallback to original scenes
+      storyDescriptions = scenes.map(s => typeof s === 'string' ? s : JSON.stringify(s));
+    }
+
+    console.log(`✅ Created ${storyDescriptions.length} connected story descriptions`);
+    storyDescriptions.forEach((desc, i) => {
+      console.log(`   Story ${i + 1}: ${desc}`);
     });
 
-    // Generate all images in parallel
-    console.log(`🎨 STEP 3/3: Generating ${scenes.length} cartoon images IN PARALLEL...`);
+    // Step 3: Generate cartoon images for all scenes IN PARALLEL for speed
+    console.log(`🎨 STEP 3/4: Generating ${storyDescriptions.length} cartoon images IN PARALLEL...`);
     
-    const imageGenerationPromises = scenesWithText.map(async ({ sceneText, order_index }) => {
-      console.log(`🖼️  Panel ${order_index + 1}/${scenes.length}: Starting image generation...`);
-      console.log(`   Scene: ${sceneText.substring(0, 100)}${sceneText.length > 100 ? '...' : ''}`);
+    // Use the short story descriptions for both display and image generation
+    const imageGenerationPromises = storyDescriptions.map(async (storyText, order_index) => {
+      console.log(`🖼️  Panel ${order_index + 1}/${storyDescriptions.length}: Starting image generation...`);
+      console.log(`   Story: ${storyText}`);
 
-      const imagePrompt = `Create a vibrant cartoon illustration that visualizes this story moment: "${sceneText}". 
+      const imagePrompt = `Create a vibrant cartoon illustration that visualizes this story moment: "${storyText}".
 
 Style: Colorful comic book style, bold outlines, expressive characters, warm and inviting atmosphere. 
 Character consistency: Keep the SAME character(s) throughout - maintain consistent appearance, age, clothing, and features across all panels.
@@ -243,7 +280,7 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
       }
 
       const imageData = await imageResponse.json();
-      console.log(`✅ Panel ${order_index + 1}/${scenes.length}: Image generated successfully`);
+      console.log(`✅ Panel ${order_index + 1}/${storyDescriptions.length}: Image generated successfully`);
 
       // Extract the base64 image from OpenAI response
       const imageUrl = imageData.data?.[0]?.b64_json 
@@ -255,7 +292,7 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
         throw new Error("Failed to get image URL from OpenAI");
       }
 
-      return { sceneText, imageUrl, order_index };
+      return { sceneText: storyText, imageUrl, order_index };
     });
 
     // Wait for all images to be generated
