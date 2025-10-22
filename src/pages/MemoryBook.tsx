@@ -4,7 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, BookHeart } from "lucide-react";
+import { Loader2, Plus, BookHeart, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Story {
   id: string;
@@ -18,6 +28,9 @@ const MemoryBook = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stories, setStories] = useState<Story[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+  const [storyToDelete, setStoryToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -55,6 +68,57 @@ const MemoryBook = () => {
     }
   };
 
+  const handleDeleteStory = async (storyId: string) => {
+    try {
+      const { error } = await supabase
+        .from("stories")
+        .delete()
+        .eq("id", storyId);
+
+      if (error) throw error;
+
+      setStories(stories.filter((s) => s.id !== storyId));
+      toast({
+        title: "Memory deleted",
+        description: "Your memory has been removed.",
+      });
+    } catch (error: any) {
+      console.error("Delete error:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { error } = await supabase
+        .from("stories")
+        .delete()
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+
+      setStories([]);
+      toast({
+        title: "All memories deleted",
+        description: "Your memory book has been cleared.",
+      });
+    } catch (error: any) {
+      console.error("Delete all error:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
@@ -73,10 +137,22 @@ const MemoryBook = () => {
           <Button variant="ghost" onClick={() => navigate("/")} className="hover:bg-primary/10">
             ← Back to Home
           </Button>
-          <Button onClick={() => navigate("/create")} className="hover:shadow-lg">
-            <Plus className="h-4 w-4 mr-2" />
-            Preserve New Memory
-          </Button>
+          <div className="flex gap-2">
+            {stories.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteAllDialogOpen(true)}
+                className="hover:shadow-lg"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete All
+              </Button>
+            )}
+            <Button onClick={() => navigate("/create")} className="hover:shadow-lg">
+              <Plus className="h-4 w-4 mr-2" />
+              Preserve New Memory
+            </Button>
+          </div>
         </div>
 
         <div className="text-center mb-12">
@@ -106,35 +182,53 @@ const MemoryBook = () => {
             {stories.map((story, index) => (
               <Card
                 key={story.id}
-                className="card-clean animate-slide-up hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer"
+                className="card-clean animate-slide-up hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
                 style={{ animationDelay: `${index * 0.1}s` }}
-                onClick={() => navigate(`/results/${story.id}`)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
                       <BookHeart className="h-6 w-6 text-white" />
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      story.status === "complete" 
-                        ? "bg-green-500/20 text-green-600" 
-                        : "bg-yellow-500/20 text-yellow-600"
-                    }`}>
-                      {story.status === "complete" ? "Ready" : "Processing"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        story.status === "complete" 
+                          ? "bg-green-500/20 text-green-600" 
+                          : "bg-yellow-500/20 text-yellow-600"
+                      }`}>
+                        {story.status === "complete" ? "Ready" : "Processing"}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStoryToDelete(story.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                    {story.story_text}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {new Date(story.created_at).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </span>
-                    <span className="text-primary hover:underline">View →</span>
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/results/${story.id}`)}
+                  >
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {story.story_text}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        {new Date(story.created_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
+                      </span>
+                      <span className="text-primary hover:underline">View →</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -142,6 +236,54 @@ const MemoryBook = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this memory?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this memory and all its cartoon panels.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (storyToDelete) {
+                  handleDeleteStory(storyToDelete);
+                  setStoryToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all memories?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete all your memories and their cartoon panels.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                handleDeleteAll();
+                setDeleteAllDialogOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
