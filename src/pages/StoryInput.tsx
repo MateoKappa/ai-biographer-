@@ -175,10 +175,10 @@ const StoryInput = () => {
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-4xl flex items-center justify-center gap-3 gradient-text mb-2">
               <Sparkles className="h-10 w-10" />
-              Create Your Story
+              Capture Your Memory
             </CardTitle>
             <CardDescription className="text-base">
-              Choose how you want to tell your story
+              Tell us about a moment you want to preserve forever
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -196,10 +196,10 @@ const StoryInput = () => {
 
               <TabsContent value="text" className="space-y-6 mt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="story">Your Story (up to {maxWords} words)</Label>
+                  <Label htmlFor="story">What memory would you like to preserve? (up to {maxWords} words)</Label>
                   <Textarea
                     id="story"
-                    placeholder="Once upon a time..."
+                    placeholder="Share a precious memory... Maybe your first day of school, how you met your partner, a family tradition, grandma's special recipe, or any moment you cherish..."
                     value={story}
                     onChange={(e) => setStory(e.target.value)}
                     rows={10}
@@ -213,7 +213,7 @@ const StoryInput = () => {
                 <div className="space-y-2">
                   <Label htmlFor="photo" className="flex items-center gap-2">
                     <ImagePlus className="h-4 w-4" />
-                    Add Your Photo (Optional)
+                    Add a Photo from That Day (Optional)
                   </Label>
                   <Input
                     id="photo"
@@ -287,7 +287,7 @@ const StoryInput = () => {
                   size="lg"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {loading ? "Creating Magic..." : "Generate Cartoon"}
+                  {loading ? "Preserving Your Memory..." : "Create Memory Cartoon"}
                 </Button>
               </TabsContent>
 

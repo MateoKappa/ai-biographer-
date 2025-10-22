@@ -10,6 +10,7 @@ import StoryQuestions from "./pages/StoryQuestions";
 import Results from "./pages/Results";
 import Templates from "./pages/Templates";
 import Session from "./pages/Session";
+import MemoryBook from "./pages/MemoryBook";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/results/:storyId" element={<Results />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/session/:templateId" element={<Session />} />
+          <Route path="/memory-book" element={<MemoryBook />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -170,11 +170,11 @@ const Results = () => {
           </div>
         </div>
 
-        <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">Your Cartoon Story</h1>
+        <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">Your Preserved Memory</h1>
         <p className="text-center text-muted-foreground mb-16 text-lg">
           {status === "processing" 
-            ? "Watch as your panels appear one by one! ✨" 
-            : "Scroll down to see your story! ✨"
+            ? "Your memory is being transformed into a beautiful cartoon! ✨" 
+            : "A moment frozen in time, preserved forever ✨"
           }
         </p>
 
@@ -228,7 +228,7 @@ const Results = () => {
         <div className="mt-16 text-center">
           <Button size="lg" variant="gradient" onClick={() => navigate("/create")} className="btn-glow">
             <Plus className="h-5 w-5 mr-2" />
-            Create Another Story
+            Preserve Another Memory
           </Button>
         </div>
       </div>

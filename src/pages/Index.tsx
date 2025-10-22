@@ -39,11 +39,14 @@ const Index = () => {
         <div className="flex gap-2">
           {user ? (
             <>
+              <Button variant="outline" onClick={() => navigate("/memory-book")}>
+                My Memories
+              </Button>
               <Button variant="outline" onClick={() => navigate("/templates")}>
                 Memory Templates
               </Button>
               <Button variant="outline" onClick={() => navigate("/create")}>
-                Create Story
+                Preserve Memory
               </Button>
               <Button variant="ghost" onClick={handleSignOut}>
                 Sign Out
@@ -63,10 +66,10 @@ const Index = () => {
             <Sparkles className="h-20 w-20 mx-auto drop-shadow-2xl" />
           </div>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 animate-slide-up drop-shadow-lg">
-            Turn Your Life Story Into a Cartoon
+            Preserve Your Memories Forever
           </h1>
           <p className="text-xl md:text-2xl mb-10 opacity-95 animate-slide-up max-w-2xl mx-auto">
-            Transform your memories into delightful cartoon panels in seconds with AI magic ✨
+            Transform your precious life stories into beautiful illustrated cartoons that last forever ✨
           </p>
           <Button
             size="lg"
@@ -84,16 +87,16 @@ const Index = () => {
       <section className="py-24 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-5xl font-bold text-center mb-4 gradient-text">How It Works</h2>
-          <p className="text-center text-muted-foreground mb-16 text-lg">Three simple steps to cartoon magic</p>
+          <p className="text-center text-muted-foreground mb-16 text-lg">Three simple steps to preserve your memories</p>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="card-clean animate-slide-up hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <CardContent className="p-8 text-center">
                 <div className="h-20 w-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
                   <BookOpen className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">1. Write Your Story</h3>
+                <h3 className="text-2xl font-bold mb-3">1. Share Your Memory</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Share your memory or creative tale in up to 300 words. Add a photo for extra personalization!
+                  Tell us about a precious memory—your first day of school, meeting your spouse, grandma's recipes, or any moment you want to preserve forever.
                 </p>
               </CardContent>
             </Card>
@@ -103,9 +106,9 @@ const Index = () => {
                 <div className="h-20 w-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg">
                   <Zap className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">2. AI Works Magic</h3>
+                <h3 className="text-2xl font-bold mb-3">2. AI Brings It to Life</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Our AI analyzes your story and creates 2-4 key scenes in beautiful cartoon style.
+                  Our AI captures the key moments and emotions, creating beautiful cartoon panels that tell your story visually.
                 </p>
               </CardContent>
             </Card>
@@ -115,10 +118,55 @@ const Index = () => {
                 <div className="h-20 w-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center shadow-lg">
                   <Image className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">3. Get Your Cartoon</h3>
+                <h3 className="text-2xl font-bold mb-3">3. Preserve & Share</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  View, download, and share your personalized cartoon story with friends and family!
+                  Your memory is now preserved forever! Download it, gift it to loved ones, or share it with family for generations to come.
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Section */}
+      <section className="py-24 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background"></div>
+        <div className="max-w-6xl mx-auto relative z-10">
+          <h2 className="text-5xl font-bold text-center mb-4 gradient-text">Memories Worth Preserving</h2>
+          <p className="text-center text-muted-foreground mb-16 text-lg">
+            See how others are preserving their precious moments
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="card-glass hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardContent className="p-8">
+                <div className="text-4xl mb-4">👵</div>
+                <h3 className="text-xl font-bold mb-2">"Grandma's Immigration Story"</h3>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  Sarah captured her grandmother's journey from Italy to America in the 1950s—a gift that brought tears to the whole family.
+                </p>
+                <p className="text-sm text-primary font-semibold">Perfect for: Family History</p>
+              </CardContent>
+            </Card>
+
+            <Card className="card-glass hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: "0.1s" }}>
+              <CardContent className="p-8">
+                <div className="text-4xl mb-4">💍</div>
+                <h3 className="text-xl font-bold mb-2">"How We Met"</h3>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  Mike surprised his wife on their anniversary with a cartoon of their first date at the coffee shop where they met.
+                </p>
+                <p className="text-sm text-primary font-semibold">Perfect for: Anniversaries</p>
+              </CardContent>
+            </Card>
+
+            <Card className="card-glass hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: "0.2s" }}>
+              <CardContent className="p-8">
+                <div className="text-4xl mb-4">🎓</div>
+                <h3 className="text-xl font-bold mb-2">"Dad's First Day Teaching"</h3>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  Emma created a cartoon of her father's first day as a teacher—a retirement gift he'll treasure forever.
+                </p>
+                <p className="text-sm text-primary font-semibold">Perfect for: Retirements</p>
               </CardContent>
             </Card>
           </div>
@@ -129,9 +177,9 @@ const Index = () => {
       <section className="py-24 px-4 relative overflow-hidden">
         <div className="absolute inset-0 gradient-accent opacity-10"></div>
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          <h2 className="text-5xl font-bold mb-4 gradient-text">Ready to Create?</h2>
+          <h2 className="text-5xl font-bold mb-4 gradient-text">Start Preserving Your Memories</h2>
           <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
-            Join thousands bringing their stories to life in cartoon form!
+            Don't let precious memories fade away. Capture them as beautiful cartoons today!
           </p>
           <Button
             size="lg"
@@ -140,7 +188,7 @@ const Index = () => {
             className="text-lg btn-glow"
           >
             <Sparkles className="mr-2 h-5 w-5" />
-            Create Your First Cartoon
+            Preserve Your First Memory
           </Button>
         </div>
       </section>
