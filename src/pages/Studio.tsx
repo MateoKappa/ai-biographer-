@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, BookOpen, Calendar, Trash2, ArrowLeft, FileText } from "lucide-react";
+import { CreditBalance } from "@/components/CreditBalance";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,10 +138,13 @@ const Studio = () => {
           </Button>
           <h1 className="text-3xl font-bold gradient-text">Management Studio</h1>
         </div>
-        <Button variant="gradient" onClick={() => navigate("/biography")} className="btn-glow">
-          <Sparkles className="mr-2 h-5 w-5" />
-          New Biography
-        </Button>
+        <div className="flex items-center gap-4">
+          <CreditBalance />
+          <Button variant="gradient" onClick={() => navigate("/biography")} className="btn-glow">
+            <Sparkles className="mr-2 h-5 w-5" />
+            New Biography
+          </Button>
+        </div>
       </header>
 
       {/* Main Content */}

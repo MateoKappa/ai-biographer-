@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Download, Share2, Plus } from "lucide-react";
 import jsPDF from "jspdf";
 import { ShareModal } from "@/components/ShareModal";
-import { CreditBalance } from "@/components/CreditBalance";
 
 interface CartoonPanel {
   id: string;
@@ -252,13 +251,12 @@ const Results = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
-      {/* Header with Credit Balance */}
+      {/* Header */}
       <header className="p-4 md:p-6 flex justify-between items-center border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <Button variant="ghost" onClick={() => navigate("/")} className="hover:bg-primary/10">
           ← Back to Home
         </Button>
-        <div className="flex gap-3 items-center">
-          <CreditBalance />
+        <div className="flex gap-3">
           <Button variant="outline" onClick={handleDownload} className="hover:shadow-lg">
             <Download className="h-4 w-4 mr-2" />
             Download

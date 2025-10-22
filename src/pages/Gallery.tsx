@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Share2, Loader2, Plus } from "lucide-react";
-import { CreditBalance } from "@/components/CreditBalance";
 import { ShareModal } from "@/components/ShareModal";
 
 interface Memory {
@@ -94,7 +93,7 @@ const Gallery = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       {/* Header */}
-      <header className="p-4 md:p-6 flex justify-between items-center border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="p-4 md:p-6 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <Button 
           variant="ghost" 
           onClick={() => navigate("/studio")}
@@ -102,7 +101,6 @@ const Gallery = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Studio
         </Button>
-        <CreditBalance />
       </header>
 
       <div className="max-w-7xl mx-auto p-4 md:p-8">

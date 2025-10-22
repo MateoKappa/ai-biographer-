@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, MicOff, Loader2, ArrowLeft, Sparkles } from "lucide-react";
 import { useConversation } from "@11labs/react";
-import { CreditBalance } from "@/components/CreditBalance";
 
 interface ConversationData {
   name?: string;
@@ -326,9 +325,8 @@ const BiographyChat = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      {/* Header */}
-      <header className="p-4 md:p-6 flex justify-between items-center border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="flex items-center gap-4">
+      <div className="max-w-5xl mx-auto p-4 md:p-8">
+        <div className="flex items-center justify-between mb-6">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/studio")}
@@ -346,22 +344,8 @@ const BiographyChat = () => {
             </div>
           )}
         </div>
-        
-        <CreditBalance />
-      </header>
 
-      <div className="max-w-5xl mx-auto p-4 md:p-8">
-
-          {(status === "connected" || isUsingTemplate) && (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-6">
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-medium text-green-700">
-                {isUsingTemplate ? "Template Mode" : "Live Interview"}
-              </span>
-            </div>
-          )}
-
-          <Card className="p-6 md:p-10 card-glass shadow-xl">
+        <Card className="p-6 md:p-10 card-glass shadow-xl">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
               <Sparkles className="h-4 w-4 text-primary" />
