@@ -220,6 +220,58 @@ const BiographyChat = () => {
     displayNextMessage();
   };
 
+  const useDemoBiography = async () => {
+    setIsUsingTemplate(true);
+    
+    // Demo conversation with fake data
+    const demoData = {
+      name: "Alex Johnson",
+      age: "45",
+      location: "San Francisco, California",
+      childhood: "I grew up in a small town in Oregon. My parents ran a local bookstore, which sparked my love for reading and storytelling. I spent countless hours exploring the shelves and imagining different worlds.",
+      career: "I started as a software engineer right out of college, but eventually transitioned into product management. I've been fortunate to work on several innovative tech products that have impacted millions of users. Currently, I'm leading a team at a startup focused on education technology.",
+      family: "I'm married to my college sweetheart, and we have two wonderful children - a 12-year-old daughter who loves art, and a 9-year-old son who's obsessed with robotics. Family game nights are our favorite tradition.",
+      challenges: "The biggest challenge was when our startup nearly failed during the 2020 pandemic. We had to pivot our entire business model and let go of half the team. It was heartbreaking but taught me resilience and the importance of adaptability.",
+      proudest_moments: "Launching our education app that's now used by over 500,000 students worldwide. Knowing that we're making a real difference in children's learning experiences keeps me motivated every day.",
+      dreams: "I dream of writing a book about the intersection of technology and education. I also hope to start a foundation that provides coding education to underprivileged communities."
+    };
+
+    const conversationFlow = [
+      { question: "Hello! I'm your AI biographer. Let's start with your name. What's your name?", field: 'name' },
+      { question: "Great to meet you! How old are you?", field: 'age' },
+      { question: "And where are you from?", field: 'location' },
+      { question: "Let's talk about your childhood. Can you tell me about your early years?", field: 'childhood' },
+      { question: "What about your career? Tell me about your professional journey.", field: 'career' },
+      { question: "Family is important. Can you tell me about your family?", field: 'family' },
+      { question: "We all face challenges. What challenges have you overcome?", field: 'challenges' },
+      { question: "What are you most proud of in your life?", field: 'proudest_moments' },
+      { question: "Finally, what are your dreams and aspirations?", field: 'dreams' },
+    ];
+
+    const demoMessages: Message[] = [];
+    for (const item of conversationFlow) {
+      demoMessages.push({ role: 'assistant', content: item.question });
+      demoMessages.push({ role: 'user', content: demoData[item.field as keyof typeof demoData] });
+    }
+
+    // Store demo data for later use
+    setConversationData(demoData);
+
+    // Display messages with animation
+    setMessages([]);
+    let currentIndex = 0;
+    
+    const displayNextMessage = () => {
+      if (currentIndex < demoMessages.length) {
+        setMessages(prev => [...prev, demoMessages[currentIndex]]);
+        currentIndex++;
+        setTimeout(displayNextMessage, 800);
+      }
+    };
+    
+    displayNextMessage();
+  };
+
   const proceedWithTemplate = async () => {
     if (!templateStory) return;
     
@@ -300,7 +352,7 @@ const BiographyChat = () => {
 
           {status === "disconnected" && !isUsingTemplate ? (
             <div className="text-center py-12">
-              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-10">
+              <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-10">
                 {/* Live Interview Option */}
                 <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 bg-gradient-to-br from-card to-card/50">
                   <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
@@ -392,6 +444,40 @@ const BiographyChat = () => {
                       </Button>
                     </>
                   )}
+                </Card>
+
+                {/* Demo Biography Option */}
+                <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-accent/50 bg-gradient-to-br from-card to-card/50">
+                  <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
+                    <Sparkles className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">Try Demo Biography</h3>
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                    See how it works with a sample biography. Perfect for testing the experience before creating your own story.
+                  </p>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 mb-6">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                    <span className="text-xs font-medium text-accent">Try it Free</span>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    size="lg"
+                    onClick={useDemoBiography}
+                    disabled={isGenerating}
+                    className="w-full border-2"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-5 w-5" />
+                        Try Demo
+                      </>
+                    )}
+                  </Button>
                 </Card>
               </div>
             </div>
