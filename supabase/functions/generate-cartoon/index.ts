@@ -46,12 +46,69 @@ serve(async (req) => {
       console.log("🎯 ADVANCED MODE: Using user-defined panels");
       const userPanels = story.context_qa;
       
-      // Generate images directly from user descriptions
-      console.log(`🎨 Generating ${userPanels.length} images from user-defined panels IN PARALLEL...`);
+      // Step 1: Convert user panel descriptions into connected story narrative
+      console.log(`📝 STEP 1/3: Converting ${userPanels.length} panel descriptions into connected story...`);
+      const narrativeResponse = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${openaiApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-5-mini-2025-08-07",
+            messages: [
+              {
+                role: "system",
+                content:
+                  `You are a storytelling expert. You will receive ${userPanels.length} panel descriptions. Convert them into ${userPanels.length} SHORT (1-2 sentences max), CONNECTED story descriptions that flow together like a narrative. Each description should tell WHAT HAPPENS in that moment of the story. They should read like: "First...", "Then...", "Finally..." - a story you'd tell someone. Return ONLY a JSON array of ${userPanels.length} SHORT story descriptions. Format: ["First moment...", "Second moment...", "Final moment..."]`,
+              },
+              {
+                role: "user",
+                content: `Convert these ${userPanels.length} panel descriptions into SHORT connected story moments:\n\n${userPanels.map((p: any, i: number) => `Panel ${i + 1}: ${p.description}`).join('\n\n')}`,
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!narrativeResponse.ok) {
+        const errorText = await narrativeResponse.text();
+        console.error("Narrative API error:", errorText);
+        throw new Error(`Failed to create story narrative: ${errorText}`);
+      }
+
+      const narrativeData = await narrativeResponse.json();
+      console.log("Narrative response:", narrativeData);
+
+      let storyDescriptions: string[];
+      try {
+        const content = narrativeData.choices[0].message.content;
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          storyDescriptions = JSON.parse(jsonMatch[0]);
+        } else {
+          storyDescriptions = JSON.parse(content);
+        }
+      } catch (parseError) {
+        console.error("Failed to parse narrative:", parseError);
+        // Fallback to user descriptions
+        storyDescriptions = userPanels.map((p: any) => p.description);
+      }
+
+      console.log(`✅ Created ${storyDescriptions.length} connected story descriptions`);
+      storyDescriptions.forEach((desc, i) => {
+        console.log(`   Story ${i + 1}: ${desc}`);
+      });
+      
+      // Step 2: Generate images from user descriptions
+      console.log(`🎨 STEP 2/3: Generating ${userPanels.length} images from user descriptions IN PARALLEL...`);
       
       const imageGenerationPromises = userPanels.map(async (panelData: any, order_index: number) => {
         console.log(`🖼️  Panel ${order_index + 1}/${userPanels.length}: Starting image generation...`);
-        console.log(`   Description: ${panelData.description}`);
+        console.log(`   User Description: ${panelData.description}`);
+        console.log(`   Story Text: ${storyDescriptions[order_index]}`);
         if (panelData.referenceImageUrl) {
           console.log(`   Reference Image: ${panelData.referenceImageUrl}`);
         }
@@ -99,7 +156,11 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
           throw new Error("Failed to get image URL from OpenAI");
         }
 
-        return { sceneText: panelData.description, imageUrl, order_index };
+        return { 
+          sceneText: storyDescriptions[order_index], // Use AI-generated story text
+          imageUrl, 
+          order_index 
+        };
       });
 
       // Wait for all images to be generated
@@ -107,14 +168,14 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
       const generatedImages = await Promise.all(imageGenerationPromises);
       console.log("✅ All images generated!");
 
-      // Save all panels to database
-      console.log("💾 Saving all panels to database...");
+      // Step 3: Save all panels to database
+      console.log("💾 STEP 3/3: Saving all panels to database...");
       for (const { sceneText, imageUrl, order_index } of generatedImages) {
         const { error: panelError } = await supabase
           .from("cartoon_panels")
           .insert({
             story_id: storyId,
-            scene_text: sceneText,
+            scene_text: sceneText, // This is now the AI-generated story text
             image_url: imageUrl,
             order_index,
           });
