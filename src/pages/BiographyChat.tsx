@@ -130,8 +130,10 @@ const BiographyChat = () => {
         .insert([{
           user_id: session.user.id,
           story_text: conversationText,
-          status: 'pending',
-          context_qa: conversationData as any
+          status: 'draft',
+          context_qa: conversationData as any,
+          temperature: 0.7,
+          desired_panels: 3
         }])
         .select()
         .single();
@@ -140,21 +142,12 @@ const BiographyChat = () => {
       if (!newStory) throw new Error("Failed to create story");
 
       toast({
-        title: "Biography Saved",
-        description: "Your life story is being created...",
+        title: "Interview Complete!",
+        description: "Now let's configure your biography...",
       });
 
-      // Trigger cartoon generation in the background
-      supabase.functions.invoke('generate-cartoon', {
-        body: { storyId: newStory.id, advancedMode: false }
-      }).then(({ error: genError }) => {
-        if (genError) {
-          console.error("Error generating cartoon:", genError);
-        }
-      });
-
-      // Navigate to results page
-      navigate(`/results/${newStory.id}`);
+      // Navigate to settings page instead
+      navigate(`/biography-settings/${newStory.id}`);
     } catch (error: any) {
       console.error("Error saving:", error);
       toast({

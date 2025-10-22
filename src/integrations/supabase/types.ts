@@ -164,33 +164,39 @@ export type Database = {
         Row: {
           context_qa: Json | null
           created_at: string
+          desired_panels: number | null
           id: string
           memory_ids: string[] | null
           photo_url: string | null
           status: string
           story_text: string
+          temperature: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           context_qa?: Json | null
           created_at?: string
+          desired_panels?: number | null
           id?: string
           memory_ids?: string[] | null
           photo_url?: string | null
           status?: string
           story_text: string
+          temperature?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           context_qa?: Json | null
           created_at?: string
+          desired_panels?: number | null
           id?: string
           memory_ids?: string[] | null
           photo_url?: string | null
           status?: string
           story_text?: string
+          temperature?: number | null
           updated_at?: string
           user_id?: string
         }

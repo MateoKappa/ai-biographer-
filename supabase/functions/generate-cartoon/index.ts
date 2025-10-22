@@ -34,6 +34,12 @@ serve(async (req) => {
     if (storyError) throw storyError;
 
     console.log("Story fetched:", story.story_text.substring(0, 100));
+    
+    // Get configuration from story
+    const NUM_PANELS = story.desired_panels || 3;
+    const TEMPERATURE = story.temperature || 0.7;
+    
+    console.log(`Configuration - Panels: ${NUM_PANELS}, Temperature: ${TEMPERATURE}`);
 
     // Update story status to processing
     await supabase
@@ -58,6 +64,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             model: "gpt-5-mini-2025-08-07",
+            temperature: TEMPERATURE,
             messages: [
               {
                 role: "system",
@@ -211,7 +218,6 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
 
     // SIMPLE MODE: Continue with AI-powered scene generation
     console.log("📖 SIMPLE MODE: Using AI to generate scenes");
-    const NUM_PANELS = 3;
 
     // Fetch the selected memories if any
     let memoriesText = "";
@@ -268,6 +274,7 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
           },
           body: JSON.stringify({
             model: "gpt-5-mini-2025-08-07",
+            temperature: TEMPERATURE,
             messages: [
               {
                 role: "system",
@@ -306,6 +313,7 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
         },
         body: JSON.stringify({
           model: "gpt-5-mini-2025-08-07",
+          temperature: TEMPERATURE,
           messages: [
             {
               role: "system",
@@ -364,6 +372,7 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
         },
         body: JSON.stringify({
           model: "gpt-5-mini-2025-08-07",
+          temperature: TEMPERATURE,
           messages: [
             {
               role: "system",
