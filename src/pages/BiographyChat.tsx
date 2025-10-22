@@ -4,8 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, MicOff, Loader2 } from "lucide-react";
-import { AudioRecorder, encodeAudioForAPI, AudioQueue } from "@/utils/BiographyAudio";
+import { Mic, MicOff, Loader2, ArrowLeft } from "lucide-react";
+import { useConversation } from "@11labs/react";
+
+interface ConversationData {
+  name?: string;
+  age?: string;
+  location?: string;
+  childhood?: string;
+  career?: string;
+  family?: string;
+  challenges?: string;
+  proudest_moments?: string;
+  dreams?: string;
+}
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,16 +27,55 @@ interface Message {
 const BiographyChat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isConnected, setIsConnected] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [conversationData, setConversationData] = useState<ConversationData>({});
   const [messages, setMessages] = useState<Message[]>([]);
-  const [conversationData, setConversationData] = useState<any[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
   
-  const wsRef = useRef<WebSocket | null>(null);
-  const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioQueueRef = useRef<AudioQueue | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("Connected to ElevenLabs");
+      toast({
+        title: "Connected",
+        description: "Your biography interview is starting...",
+      });
+    },
+    onDisconnect: () => {
+      console.log("Disconnected from ElevenLabs");
+    },
+    onMessage: (message) => {
+      console.log("Message received:", message);
+      
+      if (message.type === 'user_transcript') {
+        setMessages(prev => [...prev, { role: 'user', content: message.message }]);
+      } else if (message.type === 'agent_response') {
+        setMessages(prev => {
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg?.role === 'assistant') {
+            return [...prev.slice(0, -1), { role: 'assistant', content: lastMsg.content + message.message }];
+          }
+          return [...prev, { role: 'assistant', content: message.message }];
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Conversation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to connect. Please try again.",
+        variant: "destructive",
+      });
+    },
+    clientTools: {
+      storeUserInfo: (parameters: { field: string; value: string }) => {
+        console.log("Storing user info:", parameters);
+        setConversationData(prev => ({
+          ...prev,
+          [parameters.field]: parameters.value
+        }));
+        return "Information stored successfully";
+      }
+    }
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -40,85 +91,17 @@ const BiographyChat = () => {
     try {
       console.log("Starting conversation...");
       
-      // Request microphone permission first
-      console.log("Requesting microphone permission...");
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("Microphone permission granted");
+      // Get signed URL from our edge function
+      const { data, error } = await supabase.functions.invoke('get-elevenlabs-signed-url', {
+        body: { agentId: 'your-agent-id' } // You'll need to create an agent in ElevenLabs dashboard
+      });
+
+      if (error) throw error;
+      if (!data?.signed_url) throw new Error('No signed URL received');
+
+      console.log("Starting session with signed URL");
+      await conversation.startSession({ signedUrl: data.signed_url });
       
-      // Initialize audio context and queue
-      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-      audioQueueRef.current = new AudioQueue(audioContextRef.current);
-      console.log("Audio context initialized");
-
-      // Connect to WebSocket
-      const projectRef = "wczgqokhrlzbvhjpgebo";
-      const wsUrl = `wss://${projectRef}.supabase.co/functions/v1/biography-chat`;
-      console.log("Connecting to WebSocket:", wsUrl);
-      
-      wsRef.current = new WebSocket(wsUrl);
-
-      wsRef.current.onopen = () => {
-        console.log("WebSocket connected");
-        setIsConnected(true);
-        toast({
-          title: "Connected",
-          description: "Your biography interview is starting...",
-        });
-      };
-
-      wsRef.current.onmessage = async (event) => {
-        const data = JSON.parse(event.data);
-        console.log("Received:", data.type);
-
-        if (data.type === 'session.updated') {
-          // Start recording after session is ready
-          startRecording();
-        } else if (data.type === 'response.audio.delta') {
-          setIsSpeaking(true);
-          const binaryString = atob(data.delta);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          await audioQueueRef.current?.addToQueue(bytes);
-        } else if (data.type === 'response.audio.done') {
-          setIsSpeaking(false);
-        } else if (data.type === 'conversation.item.input_audio_transcription.completed') {
-          setMessages(prev => [...prev, { role: 'user', content: data.transcript }]);
-        } else if (data.type === 'response.audio_transcript.delta') {
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last?.role === 'assistant') {
-              return [
-                ...prev.slice(0, -1),
-                { ...last, content: last.content + data.delta }
-              ];
-            }
-            return [...prev, { role: 'assistant', content: data.delta }];
-          });
-        } else if (data.type === 'response.done') {
-          setConversationData(prev => [...prev, data]);
-        } else if (data.type === 'error') {
-          throw new Error(data.error);
-        }
-      };
-
-      wsRef.current.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        setIsConnected(false);
-        toast({
-          title: "Connection Error",
-          description: "Failed to connect to the interview service. Please check your connection.",
-          variant: "destructive",
-        });
-      };
-
-      wsRef.current.onclose = () => {
-        console.log("WebSocket closed");
-        setIsConnected(false);
-        stopRecording();
-      };
-
     } catch (error: any) {
       console.error("Error starting conversation:", error);
       toast({
@@ -129,39 +112,11 @@ const BiographyChat = () => {
     }
   };
 
-  const startRecording = async () => {
-    try {
-      recorderRef.current = new AudioRecorder((audioData) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          const base64Audio = encodeAudioForAPI(audioData);
-          wsRef.current.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: base64Audio
-          }));
-        }
-      });
-      
-      await recorderRef.current.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Error starting recording:", error);
-    }
-  };
-
-  const stopRecording = () => {
-    recorderRef.current?.stop();
-    recorderRef.current = null;
-    setIsRecording(false);
-  };
-
   const endConversation = async () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-    stopRecording();
-    audioQueueRef.current?.clear();
+    await conversation.endSession();
     
-    // Save the conversation to database
+    // Save conversation and generate biography
+    setIsGenerating(true);
     try {
       const conversationText = messages
         .map(m => `${m.role === 'user' ? 'You' : 'Interviewer'}: ${m.content}`)
@@ -172,18 +127,18 @@ const BiographyChat = () => {
 
       const { error } = await supabase
         .from('stories')
-        .insert({
+        .insert([{
           user_id: session.user.id,
           story_text: conversationText,
           status: 'pending',
-          context_qa: conversationData
-        });
+          context_qa: conversationData as any
+        }]);
 
       if (error) throw error;
 
       toast({
-        title: "Interview Saved",
-        description: "Your biography is being created...",
+        title: "Biography Saved",
+        description: "Your life story is being created...",
       });
 
       navigate('/');
@@ -194,8 +149,12 @@ const BiographyChat = () => {
         description: "Failed to save your interview",
         variant: "destructive",
       });
+    } finally {
+      setIsGenerating(false);
     }
   };
+
+  const { status, isSpeaking } = conversation;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-4 md:p-8">
@@ -205,19 +164,33 @@ const BiographyChat = () => {
           onClick={() => navigate("/")}
           className="mb-6"
         >
-          ← Back to Home
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
         </Button>
 
         <Card className="p-8 card-glass">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-3 gradient-text">Your Life Story</h1>
-            <p className="text-muted-foreground">
-              Let's have a conversation about your life and create a beautiful biography
+            <h1 className="text-4xl font-bold mb-3 gradient-text">Your Life, Told by AI</h1>
+            <p className="text-muted-foreground text-lg">
+              Have a chat with your AI biographer and get your story beautifully written
             </p>
           </div>
 
-          {!isConnected ? (
+          {status === "disconnected" ? (
             <div className="text-center py-12">
+              <div className="mb-8">
+                <p className="text-muted-foreground mb-4">
+                  Click the button below to begin your voice interview. Your AI biographer will ask you about:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-2 max-w-md mx-auto text-left">
+                  <li>✓ Your name, age, and where you're from</li>
+                  <li>✓ Important life events and milestones</li>
+                  <li>✓ Memorable moments and experiences</li>
+                  <li>✓ Family, relationships, and values</li>
+                  <li>✓ Career, achievements, and challenges</li>
+                  <li>✓ Dreams and aspirations for the future</li>
+                </ul>
+              </div>
               <Button 
                 size="lg" 
                 onClick={startConversation}
@@ -230,46 +203,61 @@ const BiographyChat = () => {
           ) : (
             <>
               <div className="mb-8 h-96 overflow-y-auto space-y-4 p-4 bg-muted/20 rounded-lg">
+                {messages.length === 0 && (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Waiting for conversation to begin...</p>
+                  </div>
+                )}
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                   >
                     <div
-                      className={`max-w-[80%] p-4 rounded-lg ${
+                      className={`max-w-[80%] p-4 rounded-2xl ${
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground'
-                          : 'bg-card'
+                          : 'bg-card border'
                       }`}
                     >
-                      <p className="text-sm">{msg.content}</p>
+                      <p className="text-sm leading-relaxed">{msg.content}</p>
                     </div>
                   </div>
                 ))}
                 {isSpeaking && (
-                  <div className="flex justify-start">
-                    <div className="bg-card p-4 rounded-lg flex items-center gap-2">
+                  <div className="flex justify-start animate-fade-in">
+                    <div className="bg-card border p-4 rounded-2xl flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm text-muted-foreground">Speaking...</span>
+                      <span className="text-sm text-muted-foreground">AI is speaking...</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-center gap-4">
-                <div className={`p-4 rounded-full ${isRecording ? 'bg-red-500/20' : 'bg-muted'}`}>
-                  {isRecording ? (
-                    <MicOff className="h-8 w-8 text-red-500" />
+              <div className="flex items-center justify-center gap-6">
+                <div className={`p-6 rounded-full transition-all ${
+                  status === 'connected' ? 'bg-green-500/20 ring-4 ring-green-500/20' : 'bg-muted'
+                }`}>
+                  {status === 'connected' ? (
+                    <Mic className="h-8 w-8 text-green-500 animate-pulse" />
                   ) : (
-                    <Mic className="h-8 w-8 text-muted-foreground" />
+                    <MicOff className="h-8 w-8 text-muted-foreground" />
                   )}
                 </div>
                 <Button 
                   onClick={endConversation}
                   variant="secondary"
                   size="lg"
+                  disabled={isGenerating}
                 >
-                  End Interview & Create Biography
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating Biography...
+                    </>
+                  ) : (
+                    'End Interview & Create Biography'
+                  )}
                 </Button>
               </div>
             </>
