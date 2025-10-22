@@ -222,28 +222,32 @@ const Studio = () => {
           {/* Memories Tab */}
           <TabsContent value="memories" className="mt-8">
             <div className="mb-6 flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">Your Memories</h2>
-                <p className="text-muted-foreground">
-                  Individual memory snapshots you can use in biographies
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => navigate("/create")}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  New Memory
-                </Button>
-                {memories.length > 0 && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => setDeleteAllDialogOpen(true)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete All
-                  </Button>
-                )}
-              </div>
-            </div>
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Your Memories</h2>
+          <p className="text-muted-foreground">
+            Individual memory snapshots you can use in biographies
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate("/gallery")}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            View Gallery
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/create")}>
+            <FileText className="mr-2 h-4 w-4" />
+            New Memory
+          </Button>
+          {memories.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteAllDialogOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete All
+            </Button>
+          )}
+        </div>
+      </div>
 
             {loadingMemories ? (
               <div className="text-center py-12">

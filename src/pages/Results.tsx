@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Download, Share2, Plus } from "lucide-react";
 import jsPDF from "jspdf";
+import { ShareModal } from "@/components/ShareModal";
+import { CreditBalance } from "@/components/CreditBalance";
 
 interface CartoonPanel {
   id: string;
@@ -24,6 +26,7 @@ const Results = () => {
   const [status, setStatus] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isBiography, setIsBiography] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -200,10 +203,7 @@ const Results = () => {
   };
 
   const handleShare = () => {
-    toast({
-      title: "Coming soon!",
-      description: "Share feature will be available soon.",
-    });
+    setShareModalOpen(true);
   };
 
   const handleGenerateCartoon = async () => {
@@ -251,24 +251,26 @@ const Results = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-gradient-to-b from-background via-muted/20 to-background">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <Button variant="ghost" onClick={() => navigate("/")} className="hover:bg-primary/10">
-            ← Back to Home
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
+      {/* Header with Credit Balance */}
+      <header className="p-4 md:p-6 flex justify-between items-center border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+        <Button variant="ghost" onClick={() => navigate("/")} className="hover:bg-primary/10">
+          ← Back to Home
+        </Button>
+        <div className="flex gap-3 items-center">
+          <CreditBalance />
+          <Button variant="outline" onClick={handleDownload} className="hover:shadow-lg">
+            <Download className="h-4 w-4 mr-2" />
+            Download
           </Button>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleDownload} className="hover:shadow-lg">
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-            <Button variant="outline" onClick={handleShare} className="hover:shadow-lg">
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-          </div>
+          <Button variant="gradient" onClick={handleShare} className="btn-glow">
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
+          </Button>
         </div>
-
+      </header>
+      
+      <div className="max-w-5xl mx-auto p-4 md:p-8">
         <h1 className="text-5xl md:text-6xl font-bold text-center mb-3 gradient-text">
           {isBiography ? "Your Life Story" : "Your Preserved Memory"}
         </h1>
@@ -361,6 +363,13 @@ const Results = () => {
           </Button>
         </div>
       </div>
+
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        storyTitle={isBiography ? "My Life Story" : "My Memory"}
+        storyId={storyId || ""}
+      />
     </div>
   );
 };

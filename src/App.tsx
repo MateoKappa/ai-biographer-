@@ -11,6 +11,7 @@ import BiographySettings from "./pages/BiographySettings";
 import Results from "./pages/Results";
 import MemoryBook from "./pages/MemoryBook";
 import Studio from "./pages/Studio";
+import Gallery from "./pages/Gallery";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/biography-settings/:storyId" element={<BiographySettings />} />
           <Route path="/results/:storyId" element={<Results />} />
           <Route path="/memory-book" element={<MemoryBook />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/studio" element={<Studio />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

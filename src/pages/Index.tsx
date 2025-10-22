@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, BookOpen, Image, Zap, Calendar, MessageSquare, Palette, Gift } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { CreditBalance } from "@/components/CreditBalance";
 
 interface Biography {
   id: string;
@@ -75,7 +76,8 @@ const Index = () => {
           <img src={logo} alt="AI Biographer" className="h-10 w-10" />
           <h2 className="text-2xl font-bold gradient-text">AI Biographer</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3 items-center">
+          {user && <CreditBalance />}
           {user ? (
             <>
               <Button variant="outline" onClick={() => navigate("/studio")}>

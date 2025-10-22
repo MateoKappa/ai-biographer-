@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, MicOff, Loader2, ArrowLeft, Sparkles } from "lucide-react";
 import { useConversation } from "@11labs/react";
+import { CreditBalance } from "@/components/CreditBalance";
 
 interface ConversationData {
   name?: string;
@@ -325,8 +326,9 @@ const BiographyChat = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="max-w-5xl mx-auto p-4 md:p-8">
-        <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <header className="p-4 md:p-6 flex justify-between items-center border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/studio")}
@@ -344,8 +346,22 @@ const BiographyChat = () => {
             </div>
           )}
         </div>
+        
+        <CreditBalance />
+      </header>
 
-        <Card className="p-6 md:p-10 card-glass shadow-xl">
+      <div className="max-w-5xl mx-auto p-4 md:p-8">
+
+          {(status === "connected" || isUsingTemplate) && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-6">
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-sm font-medium text-green-700">
+                {isUsingTemplate ? "Template Mode" : "Live Interview"}
+              </span>
+            </div>
+          )}
+
+          <Card className="p-6 md:p-10 card-glass shadow-xl">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -353,13 +369,13 @@ const BiographyChat = () => {
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-3 gradient-text">Your Life, Told by AI</h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Have a natural conversation with your AI biographer or use your previous story as a template
+              Have a natural conversation with your AI biographer or try a demo
             </p>
           </div>
 
           {status === "disconnected" && !isUsingTemplate ? (
             <div className="text-center py-12">
-              <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-10">
+              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-10">
                 {/* Live Interview Option */}
                 <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 bg-gradient-to-br from-card to-card/50">
                   <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
@@ -395,62 +411,6 @@ const BiographyChat = () => {
                     <Mic className="mr-2 h-5 w-5" />
                     Start Interview
                   </Button>
-                </Card>
-
-                {/* Template Option */}
-                <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-secondary/50 bg-gradient-to-br from-card to-card/50">
-                  <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-                    <Sparkles className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-3">Use Previous Biography</h3>
-                  {templateStory ? (
-                    <>
-                      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                        Skip the interview and use your previous biography as a starting point. View the conversation and proceed to customization.
-                      </p>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/10 mb-6">
-                        <Sparkles className="h-4 w-4 text-secondary" />
-                        <span className="text-xs font-medium text-secondary">Quick & Easy</span>
-                      </div>
-                      <Button 
-                        variant="outline"
-                        size="lg"
-                        onClick={useTemplate}
-                        disabled={isGenerating}
-                        className="w-full border-2"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="mr-2 h-5 w-5" />
-                            Use Template
-                          </>
-                        )}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                        Complete your first biography to unlock this feature. You'll be able to reuse your previous story as a template.
-                      </p>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 mb-6">
-                        <span className="text-xs font-medium text-muted-foreground">Available after first biography</span>
-                      </div>
-                      <Button 
-                        variant="outline"
-                        size="lg"
-                        disabled
-                        className="w-full border-2"
-                      >
-                        <Sparkles className="mr-2 h-5 w-5" />
-                        Use Template
-                      </Button>
-                    </>
-                  )}
                 </Card>
 
                 {/* Demo Biography Option */}
