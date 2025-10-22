@@ -162,6 +162,7 @@ export type Database = {
       }
       stories: {
         Row: {
+          animation_style: string | null
           context_qa: Json | null
           created_at: string
           desired_panels: number | null
@@ -175,6 +176,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          animation_style?: string | null
           context_qa?: Json | null
           created_at?: string
           desired_panels?: number | null
@@ -188,6 +190,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          animation_style?: string | null
           context_qa?: Json | null
           created_at?: string
           desired_panels?: number | null

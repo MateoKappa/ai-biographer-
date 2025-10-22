@@ -24,8 +24,8 @@ const BiographySettings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [temperature, setTemperature] = useState(0.7);
   const [desiredPanels, setDesiredPanels] = useState(3);
+  const [animationStyle, setAnimationStyle] = useState('classic_cartoon');
   const [memories, setMemories] = useState<Memory[]>([]);
   const [selectedMemories, setSelectedMemories] = useState<string[]>([]);
 
@@ -53,8 +53,8 @@ const BiographySettings = () => {
 
       if (storyError) throw storyError;
 
-      setTemperature(story.temperature || 0.7);
       setDesiredPanels(story.desired_panels || 3);
+      setAnimationStyle(story.animation_style || 'classic_cartoon');
       setSelectedMemories(story.memory_ids || []);
 
       // Load available memories
@@ -97,8 +97,8 @@ const BiographySettings = () => {
       const { error: updateError } = await supabase
         .from("stories")
         .update({
-          temperature,
           desired_panels: desiredPanels,
+          animation_style: animationStyle,
           memory_ids: selectedMemories,
           status: "pending"
         })
@@ -162,30 +162,38 @@ const BiographySettings = () => {
           </div>
 
           <div className="space-y-8">
-          <div>
-            <Label className="text-lg font-semibold mb-4 block">
-              AI Creativity (Temperature)
-            </Label>
-            <p className="text-sm text-muted-foreground mb-4">
-              Note: This setting is saved but currently not applied due to model limitations. The biography will use the default creativity level.
-            </p>
-            <div className="flex items-center gap-4 opacity-50">
-              <span className="text-sm text-muted-foreground min-w-[80px]">Factual (0.0)</span>
-              <Slider
-                value={[temperature]}
-                onValueChange={(value) => setTemperature(value[0])}
-                min={0}
-                max={1}
-                step={0.1}
-                className="flex-1"
-                disabled
-              />
-              <span className="text-sm text-muted-foreground min-w-[80px] text-right">Creative (1.0)</span>
+            {/* Animation Style */}
+            <div>
+              <Label className="text-lg font-semibold mb-4 block">
+                Animation Style
+              </Label>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choose the visual style for your biography
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  { value: 'classic_cartoon', label: 'Classic Cartoon', emoji: '🎨' },
+                  { value: 'anime', label: 'Anime', emoji: '⭐' },
+                  { value: 'comic_book', label: 'Comic Book', emoji: '💥' },
+                  { value: 'watercolor', label: 'Watercolor', emoji: '🖌️' },
+                  { value: 'pixel_art', label: 'Pixel Art', emoji: '👾' },
+                  { value: 'realistic', label: 'Realistic', emoji: '📸' }
+                ].map(style => (
+                  <button
+                    key={style.value}
+                    onClick={() => setAnimationStyle(style.value)}
+                    className={`p-4 rounded-lg border-2 transition-all text-center hover:scale-105 ${
+                      animationStyle === style.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">{style.emoji}</div>
+                    <div className="text-sm font-medium">{style.label}</div>
+                  </button>
+                ))}
+              </div>
             </div>
-            <p className="text-center mt-2 font-semibold text-muted-foreground">
-              Current: {temperature.toFixed(1)} (not applied)
-            </p>
-          </div>
 
             {/* Panels Setting */}
             <div>

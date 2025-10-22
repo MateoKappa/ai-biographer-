@@ -37,9 +37,21 @@ serve(async (req) => {
     
     // Get configuration from story
     const NUM_PANELS = story.desired_panels || 3;
-    const TEMPERATURE = story.temperature || 0.7;
+    const ANIMATION_STYLE = story.animation_style || 'classic_cartoon';
     
-    console.log(`Configuration - Panels: ${NUM_PANELS}, Temperature: ${TEMPERATURE}`);
+    // Define style descriptions
+    const styleDescriptions: Record<string, string> = {
+      classic_cartoon: 'Colorful classic cartoon style with bold outlines, expressive characters, warm vibrant colors',
+      anime: 'Anime/manga style with detailed shading, expressive eyes, dynamic poses',
+      comic_book: 'American comic book style with bold inks, dramatic lighting, action-oriented composition',
+      watercolor: 'Soft watercolor painting style with flowing colors, gentle brushstrokes, artistic feel',
+      pixel_art: 'Retro pixel art style with 16-bit aesthetics, clear pixels, nostalgic gaming feel',
+      realistic: 'Photorealistic style with detailed textures, natural lighting, lifelike representation'
+    };
+    
+    const stylePrompt = styleDescriptions[ANIMATION_STYLE] || styleDescriptions.classic_cartoon;
+    
+    console.log(`Configuration - Panels: ${NUM_PANELS}, Style: ${ANIMATION_STYLE}`);
 
     // Update story status to processing
     await supabase
@@ -121,9 +133,12 @@ serve(async (req) => {
 
         const imagePrompt = `Create a vibrant cartoon illustration based on this description: "${panelData.description}".
 
-Style: Colorful comic book style, bold outlines, expressive characters, warm and inviting atmosphere.
-Character consistency: Keep the SAME character(s) throughout - maintain consistent appearance, age, clothing, and features across all panels.
-Composition: Cinematic, emotionally engaging, suitable for all ages, focus on the moment described.`;
+IMPORTANT: Create a MULTI-PANEL COMIC LAYOUT showing ${NUM_PANELS} connected moments of this scene arranged in a grid (like a comic book page). Each panel should show a different moment or angle of the story, all within ONE image.
+
+Style: ${stylePrompt}
+Layout: Comic book page with ${NUM_PANELS} panels arranged in a grid, with clear borders between panels
+Character consistency: Keep the SAME character(s) throughout ALL panels - maintain consistent appearance, age, clothing, and features
+Composition: Dynamic comic book layout, cinematic angles, emotionally engaging, suitable for all ages`;
 
         const imageResponse = await fetch(
           "https://api.openai.com/v1/images/generations",
@@ -423,9 +438,12 @@ Composition: Cinematic, emotionally engaging, suitable for all ages, focus on th
 
       const imagePrompt = `Create a vibrant cartoon illustration that visualizes this story moment: "${storyText}".
 
-Style: Colorful comic book style, bold outlines, expressive characters, warm and inviting atmosphere. 
-Character consistency: Keep the SAME character(s) throughout - maintain consistent appearance, age, clothing, and features across all panels.
-Composition: Cinematic, emotionally engaging, suitable for all ages, focus on the action/emotion of this moment in the story.`;
+IMPORTANT: Create a MULTI-PANEL COMIC LAYOUT showing ${NUM_PANELS} connected sequential moments arranged in a grid (like a comic book page). Show the progression of this story across multiple panels within ONE image.
+
+Style: ${stylePrompt}
+Layout: Comic book page with ${NUM_PANELS} panels in a grid, with clear panel borders
+Character consistency: Keep the SAME character(s) throughout ALL panels - maintain consistent appearance, age, clothing, and features across all panels
+Composition: Dynamic sequential storytelling, varied angles, emotionally engaging, family-friendly`;
 
       const imageResponse = await fetch(
         "https://api.openai.com/v1/images/generations",
