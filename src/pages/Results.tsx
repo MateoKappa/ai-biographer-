@@ -22,6 +22,7 @@ const Results = () => {
   const [panels, setPanels] = useState<CartoonPanel[]>([]);
   const [storyText, setStoryText] = useState("");
   const [status, setStatus] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -203,6 +204,36 @@ const Results = () => {
     });
   };
 
+  const handleGenerateCartoon = async () => {
+    setIsGenerating(true);
+    try {
+      toast({
+        title: "Starting Generation",
+        description: "Your biography is now being transformed into a cartoon...",
+      });
+
+      const { error } = await supabase.functions.invoke('generate-cartoon', {
+        body: { storyId, advancedMode: false }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Generation Started!",
+        description: "Your panels will appear below in about 30-60 seconds.",
+      });
+    } catch (error: any) {
+      console.error("Error starting generation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start cartoon generation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
@@ -243,6 +274,30 @@ const Results = () => {
             : "A moment frozen in time, preserved forever ✨"
           }
         </p>
+
+        {status === "pending" && panels.length === 0 && (
+          <Card className="card-glass p-10 text-center mb-10">
+            <p className="text-muted-foreground text-lg mb-4">
+              Your biography is saved but hasn't been transformed into a cartoon yet.
+            </p>
+            <Button 
+              onClick={handleGenerateCartoon} 
+              disabled={isGenerating}
+              size="lg"
+              variant="gradient"
+              className="btn-glow"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Starting Generation...
+                </>
+              ) : (
+                "Generate Cartoon Now"
+              )}
+            </Button>
+          </Card>
+        )}
 
         {status === "processing" && panels.length === 0 && (
           <Card className="card-glass p-10 text-center mb-10 animate-pulse">
